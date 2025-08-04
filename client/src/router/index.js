@@ -5,7 +5,7 @@ import Dashboard from '../views/Dashboard.vue'
 import Reservation from '../views/Reservation.vue'
 import Inventory from '../views/Inventory.vue'
 import Sales from '../views/Sales.vue'
-import Settings from '../views/Settings.vue'
+import Accounts from '../views/Accounts.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,9 +41,9 @@ const router = createRouter({
       component: Sales,
     },
     {
-      path: '/settings',
-      name: 'settings',
-      component: Settings,
+      path: '/accounts',
+      name: 'accounts',
+      component: Accounts,
     },
   ],
 })
