@@ -46,10 +46,14 @@ const navItems = ref([
         path:'/sales'
     },
     {
-        title: 'Settings',
-        icon: 'mdi-cog-outline',
-        path:'/settings'
+        title: 'Accounts',
+        icon: 'mdi-account',
+        path:'/accounts'
     },
+    {
+      title: 'Logout',
+      icon: 'mdi-logout'
+    }
 ])
 
 const changePath = (path) => {
