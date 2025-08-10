@@ -65,7 +65,11 @@
 </template>
 
 <script setup>
+import axios from 'axios'
 import { ref } from 'vue';
+
+const username = ref('')
+const password = ref('')
 
 const products = ref([
   {
@@ -101,6 +105,7 @@ const products = ref([
     inStock: false,
   }
 ]);
+
 </script>
 
 <style scoped>
