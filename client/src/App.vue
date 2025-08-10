@@ -1,11 +1,11 @@
 <script setup>
-import AppBar from './components/AppBar.vue'
+  import AppBar from './components/AppBar.vue'
 </script>
 
 <template>
   <div>
     <v-app class="body">
-      <AppBar/>
+      <AppBar v-if="urlPath != '/loginPage'"/>
       
       <v-main>
         <RouterView/>

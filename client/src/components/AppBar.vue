@@ -52,11 +52,17 @@ const navItems = ref([
     },
     {
       title: 'Logout',
-      icon: 'mdi-logout'
+      icon: 'mdi-logout',
+      path: 'logout'
     }
 ])
 
 const changePath = (path) => {
+  if(path == 'logout'){
+    router.push('/loginPage')
+    return
+  }
+
     router.push(path)
 }
 
