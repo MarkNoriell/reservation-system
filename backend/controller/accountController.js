@@ -1,13 +1,8 @@
-exports.fetchAccounts = (req,res) => {
-    const accounts = [
-        {
-            username:'bacoor',
-            password:'Sunny'
-        }
-    ]
+const { fetchAccountsModel } = require('../models/accountsModel.js')
 
-    res.send({
-        message:"Account Controller!",
-        response: accounts
-    })
+exports.fetchAccounts = async (req,res) => {
+ const response = await fetchAccountsModel()
+ res.send({
+    response
+ })
 }
