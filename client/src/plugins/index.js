@@ -1,8 +1,10 @@
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
+import { createPinia } from 'pinia'
 import { createVuetify } from "vuetify"
 import * as directives from 'vuetify/directives'
 import * as components from 'vuetify/components'
+import piniaPluginPersistedState from 'pinia-plugin-persistedstate'
 
 const preServeTheme = {
     dark: false,
@@ -22,6 +24,10 @@ const preServeTheme = {
 }
 
 export const registerPlugins = (app) => {
+    const pinia = createPinia()
+    pinia.use(piniaPluginPersistedState)
+
+    app.use(pinia)
     app.use(createVuetify({
         directives,
         components,

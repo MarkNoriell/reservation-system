@@ -21,8 +21,10 @@
     import axios from 'axios'
     import { ref } from 'vue'
     import { useRouter } from 'vue-router'
+    import { persistStore } from '@/stores/persistStore'
 
     const router = useRouter()
+    const usePersistStore = persistStore()
 
     let loginCredentials = ref({
         username: '',
@@ -35,6 +37,7 @@
             console.log(isAccountCorrect.response,"loginCredentials");
 
             if(isAccountCorrect.response.length > 0){
+                usePersistStore.saveLoginCredentials(loginCredentials.value)
                 router.push("/dashboard")
             }
             else{

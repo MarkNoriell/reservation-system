@@ -1,11 +1,20 @@
 <script setup>
   import AppBar from './components/AppBar.vue'
+  import { persistStore } from './stores/persistStore';
+
+  const usePersistStore = persistStore()
+
+  const isAccountCredentialsNotEmpty = ({ username, password }) => {
+    return username != '' && password != ''
+  }
+
+
 </script>
 
 <template>
   <div>
     <v-app class="body">
-      <AppBar v-if="urlPath != '/loginPage'"/>
+      <AppBar v-if="isAccountCredentialsNotEmpty(usePersistStore.accountCredentials)"/>
       
       <v-main>
         <RouterView/>

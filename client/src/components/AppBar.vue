@@ -20,8 +20,10 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
+import { persistStore } from '@/stores/persistStore'
 
 const router = useRouter()
+const usePersistStore = persistStore()
 
 const drawer = ref(false)
 const navItems = ref([
@@ -59,6 +61,7 @@ const navItems = ref([
 
 const changePath = (path) => {
   if(path == 'logout'){
+    usePersistStore.clearLoginCredentials()
     router.push('/loginPage')
     return
   }
