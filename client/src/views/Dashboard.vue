@@ -1,12 +1,11 @@
 <template>
-
       <v-container fluid>
         <h1 class="text-h4 font-weight-bold mb-6" style="color: var(--v-theme-text);">Dashboard</h1>
 
         <!-- Main Stats Cards -->
         <v-row>
           <!-- Sales Card -->
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="6">
             <v-card class="rounded-lg pa-2" elevation="2">
               <v-card-title class="d-flex align-center">
                 <v-icon icon="mdi-currency-php" class="mr-3" color="success" size="large"></v-icon>
@@ -22,7 +21,7 @@
           </v-col>
 
           <!-- Top Selling Product Card -->
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="6">
             <v-card class="rounded-lg pa-2" elevation="2">
               <v-card-title class="d-flex align-center">
                 <v-icon icon="mdi-trophy-award" class="mr-3" color="warning" size="large"></v-icon>
@@ -38,29 +37,6 @@
                   </p>
                   <v-chip color="primary" size="small">{{ topSeller.sold }} units sold</v-chip>
               </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- Low Stocks Card -->
-          <v-col cols="12" md="4">
-            <v-card class="rounded-lg pa-2" elevation="2">
-                <v-card-title class="d-flex align-center">
-                    <v-icon icon="mdi-alert-circle-outline" class="mr-3" color="error" size="large"></v-icon>
-                    <span class="font-weight-bold text-subtitle-1" style="color: var(--v-theme-text);">Low Stocks</span>
-                </v-card-title>
-                <v-card-text>
-                    <v-list v-if="lowStockItems.length > 0" density="compact" class="py-0">
-                        <v-list-item v-for="item in lowStockItems" :key="item.id" class="px-0">
-                            <v-list-item-title class="font-weight-medium">{{ item.name }}</v-list-item-title>
-                            <template v-slot:append>
-                                <v-chip size="small" variant="tonal" color="error">
-                                    {{ item.stock }} left
-                                </v-chip>
-                            </template>
-                        </v-list-item>
-                    </v-list>
-                    <p v-else class="text-medium-emphasis">No items with low stock.</p>
-                </v-card-text>
             </v-card>
           </v-col>
         </v-row>
@@ -89,16 +65,16 @@
                 </v-card>
             </v-col>
 
-            <!-- Stock Report -->
+            <!-- Active Products -->
             <v-col cols="12" md="6">
                 <v-card class="rounded-lg" elevation="2">
                     <v-card-title class="d-flex align-center">
                         <v-icon icon="mdi-package-variant-closed" class="mr-3" size="large" color="primary-darken-1"></v-icon>
-                        <span class="font-weight-bold text-h6" style="color: var(--v-theme-text);">Stock Report</span>
+                        <span class="font-weight-bold text-h6" style="color: var(--v-theme-text);">Active Products</span>
                     </v-card-title>
                     <v-card-text>
                         <v-data-table
-                            :headers="stockHeaders"
+                            :headers="activeProductsHeader"
                             :items="products"
                             items-per-page="5"
                             class="elevation-0"
@@ -170,11 +146,9 @@ const reservationHeaders = [
   { title: 'Status', key: 'status', align: 'center', sortable: false },
 ];
 
-const stockHeaders = [
+const activeProductsHeader = [
     { title: 'Product Name', key: 'name', sortable: true },
     { title: 'Price', key: 'price', align: 'end' },
-    { title: 'Stock', key: 'stock', align: 'end' },
-    { title: 'Status', key: 'status', align: 'center', sortable: false },
 ];
 
 </script>
