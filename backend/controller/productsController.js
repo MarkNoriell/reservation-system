@@ -15,9 +15,7 @@ exports.addProduct = async (req,res) => {
 exports.fetchProducts = async (req,res) => {
     try {
         const response = await fetchProductsModel()
-        res.send({
-            response
-        })
+        res.json(response)
     } catch (error) {
         console.error("Something went wrong! Unable to fetch product", error);
     }
