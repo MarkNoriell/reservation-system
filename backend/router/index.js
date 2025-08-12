@@ -2,8 +2,12 @@ const express = require('express')
 const router = express.Router()
 
 const { fetchAccounts, loginAccount } = require('../controller/accountController.js')
+const { addProduct, fetchProducts, updateProduct } = require('../controller/productsController.js')
 
 router.get("/fetchAccounts", fetchAccounts)
 router.post("/loginAccount", loginAccount)
+router.post("/addProduct", addProduct)
+router.get("/fetchProducts", fetchProducts)
+router.post("/updateProduct", updateProduct)
 
 module.exports = router
