@@ -7,6 +7,7 @@ exports.addProductModel = (productDetails) => {
         product_name,  
         product_price,
         product_colors,
+        product_image,
         archived
     } = productDetails
 
@@ -17,8 +18,8 @@ exports.addProductModel = (productDetails) => {
                 return reject(err);
             }
 
-            const query = `INSERT INTO products (product_category, product_name, product_price, product_colors, archived) 
-            VALUES ('${product_category}', '${product_name}', ${product_price}, '${product_colors}', '${archived}')`;
+            const query = `INSERT INTO products (product_category, product_name, product_price, product_colors, product_image, archived) 
+            VALUES ('${product_category}', '${product_name}', ${product_price}, '${product_colors}', '${product_image}', '${archived}')`;
 
             connection.query(query, (err, result) => {
                 connection.release();
@@ -65,6 +66,7 @@ exports.updateProductsModel = (updatedProductDetails) => {
         product_name,  
         product_price,
         product_colors,
+        product_image,
         archived
     } = updatedProductDetails
     
@@ -80,11 +82,9 @@ exports.updateProductsModel = (updatedProductDetails) => {
                         product_name = '${product_name}',
                         product_price = '${product_price}',
                         product_colors = '${product_colors}',
+                        product_image = '${product_image}',
                         archived = '${archived}'
                         WHERE product_id = '${product_id}'`;
-
-            //              const query = `INSERT INTO products (product_category, product_name, product_price, product_colors, archived) 
-            // VALUES ('${product_category}', '${product_name}', ${product_price}, '${product_colors}', '${archived}')`;
 
             connection.query(query, (err, result) => {
                 connection.release();
