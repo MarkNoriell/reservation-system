@@ -1,13 +1,3 @@
-My apologies for the interruption. I have restored and completed the code for you.
-
-Here is the complete and corrected component with the search bar functionality fully integrated.
-
-code
-Vue
-download
-content_copy
-expand_less
-
 <template>
   <v-app>
     <v-main style="background-color: var(--v-theme-background);">
@@ -64,7 +54,7 @@ expand_less
                 >
                   <!-- Custom Slots for better display -->
                   <template v-slot:item.imageUrl="{ item }">
-                    <v-avatar class="ma-2" rounded="lg">
+                    <v-avatar class="ma-2 rounded-lg clickable-image" @click="enlargeImage(item.imageUrl)">
                        <v-img :src="item.imageUrl" :alt="item.name" cover></v-img>
                     </v-avatar>
                   </template>
@@ -120,7 +110,16 @@ expand_less
                               <v-select v-model="editedItem.category" :items="categories" label="Category" variant="outlined"></v-select>
                           </v-col>
                       </v-row>
-                      <v-text-field v-model="editedItem.imageUrl" label="Image URL" variant="outlined"></v-text-field>
+                       <input type="file" @change="handleUpload" accept="image/*" />
+                       <br>
+                      <img 
+                        v-if="previewImageSrc"
+                        :src="previewImageSrc" 
+                        :alt="sampleFile.filename || 'Product image'" 
+                        class="image-preview clickable-image" 
+                        contain
+                        @click="enlargeImage(previewImageSrc)"
+                      />
                       
                       <v-divider class="my-4"></v-divider>
                       
@@ -170,6 +169,19 @@ expand_less
         </v-card>
       </v-dialog>
 
+      <!-- Reusable Image Enlarge Dialog -->
+      <v-dialog v-model="imageDialog" max-width="800px">
+        <v-card class="rounded-lg">
+          <v-card-text class="pa-2">
+             <v-img :src="enlargedImageUrl" contain max-height="80vh"></v-img>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="imageDialog = false" color="primary">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
     </v-main>
   </v-app>
 </template>
@@ -180,18 +192,20 @@ import { ref, computed } from 'vue';
 // --- MOCK DATA & CONSTANTS ---
 const categories = ['Keychain', 'Plushie', 'Coaster', 'Tote Bag', 'Character'];
 const products = ref([
-  { id: 1, name: 'Bear Keychain', price: 150.00, category: 'Keychain', colors: ['Brown', 'White'], imageUrl: 'https://i.etsystatic.com/43491227/r/il/6bf599/5001438258/il_600x600.5001438258_t9g2.jpg', isActive: true },
-  { id: 2, name: 'Duck Plushie', price: 350.00, category: 'Plushie', colors: ['Yellow'], imageUrl: 'https://i.etsystatic.com/23247021/r/il/43117b/4751435874/il_600x600.4751435874_k249.jpg', isActive: true },
-  { id: 3, name: 'Gojo Satoru', price: 500.00, category: 'Character', colors: [], imageUrl: 'https://i.etsystatic.com/39563853/r/il/5070a8/4566367935/il_600x600.4566367935_pye7.jpg', isActive: true },
-  { id: 4, name: 'Flower Coaster', price: 120.00, category: 'Coaster', colors: ['Pink', 'Blue', 'Green'], imageUrl: 'https://i.etsystatic.com/49257257/r/il/3a0333/5623072216/il_600x600.5623072216_hczf.jpg', isActive: true },
+  { id: 1, name: 'Bear Keychain', price: 150.00, category: 'Keychain', colors: ['Brown', 'White'], imageUrl: 'https://static.vecteezy.com/system/resources/previews/024/983/914/non_2x/simple-user-default-icon-free-png.png', isActive: true },
+  { id: 2, name: 'Duck Plushie', price: 350.00, category: 'Plushie', colors: ['Yellow'], imageUrl: 'https://static.vecteezy.com/system/resources/previews/024/983/914/non_2x/simple-user-default-icon-free-png.png', isActive: true },
+  { id: 3, name: 'Gojo Satoru', price: 500.00, category: 'Character', colors: [], imageUrl: 'https://static.vecteezy.com/system/resources/previews/024/983/914/non_2x/simple-user-default-icon-free-png.png', isActive: true },
+  { id: 4, name: 'Flower Coaster', price: 120.00, category: 'Coaster', colors: ['Pink', 'Blue', 'Green'], imageUrl: 'https://static.vecteezy.com/system/resources/previews/024/983/914/non_2x/simple-user-default-icon-free-png.png', isActive: true },
 ]);
 
 // --- STATE ---
 const dialog = ref(false);
 const confirmArchiveDialog = ref(false);
+const imageDialog = ref(false);
 const showArchived = ref(false);
 const newColor = ref('');
 const searchQuery = ref('');
+const enlargedImageUrl = ref('');
 
 const headers = [
   { title: 'Image', key: 'imageUrl', sortable: false },
@@ -208,7 +222,7 @@ const defaultItem = {
   price: 0,
   category: null,
   colors: [],
-  imageUrl: 'https://via.placeholder.com/150/FADCD9/5D4037?text=New',
+  imageUrl: 'https://static.vecteezy.com/system/resources/previews/024/983/914/non_2x/simple-user-default-icon-free-png.png',
   isActive: true,
 };
 
@@ -216,25 +230,68 @@ const editedIndex = ref(-1);
 const editedItem = ref({ ...defaultItem });
 const itemToArchive = ref({});
 
+const sampleFile = ref({
+  filename: '',
+  imageData:''
+})
+
+// --- IMAGE HANDLING ---
+const handleUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const base64String = reader.result;
+    sampleFile.value.filename = file.name;
+    sampleFile.value.imageData = base64String;
+  }
+  reader.readAsDataURL(file);
+}
+
+const enlargeImage = (imageUrl) => {
+  if (!imageUrl) return;
+  enlargedImageUrl.value = imageUrl;
+  imageDialog.value = true;
+};
+
+
 // --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (editedIndex.value === -1 ? 'Add New Product' : 'Edit Product'));
 const filteredProducts = computed(() => products.value.filter(p => p.isActive === !showArchived.value));
+
+const previewImageSrc = computed(() => {
+  // If a new image is being uploaded, show it.
+  if (sampleFile.value.imageData) {
+    return sampleFile.value.imageData;
+  }
+  // Otherwise, show the existing image for the item being edited.
+  if (editedItem.value.imageUrl) {
+    return editedItem.value.imageUrl;
+  }
+  // Return null if no image source is available
+  return null;
+});
+
 
 // --- DIALOG FUNCTIONS ---
 const openAddDialog = () => {
   editedIndex.value = -1;
   editedItem.value = JSON.parse(JSON.stringify(defaultItem));
+  sampleFile.value = { filename: '', imageData: '' }; // Reset file state
   dialog.value = true;
 };
 
 const openEditDialog = (item) => {
   editedIndex.value = products.value.findIndex(p => p.id === item.id);
   editedItem.value = JSON.parse(JSON.stringify(item));
+  sampleFile.value = { filename: '', imageData: '' }; // Reset file state
   dialog.value = true;
 };
 
 const closeDialog = () => {
   dialog.value = false;
+  sampleFile.value = { filename: '', imageData: '' }; // Reset file state
 };
 
 const openConfirmArchiveDialog = (item) => {
@@ -260,6 +317,11 @@ const removeColor = (index) => {
 
 // --- CRUD & ARCHIVE FUNCTIONS ---
 const save = () => {
+  // If a new image was uploaded, update the item's imageUrl with the new Base64 data
+  if (sampleFile.value.imageData) {
+    editedItem.value.imageUrl = sampleFile.value.imageData;
+  }
+  
   if (editedIndex.value > -1) {
     Object.assign(products.value[editedIndex.value], editedItem.value);
   } else {
@@ -292,8 +354,19 @@ const restoreItem = (item) => {
 .v-data-table {
   background-color: transparent !important;
 }
+.v-icon:hover, .clickable-image:hover {
+  cursor: pointer;
+}
 .v-icon:hover {
   color: var(--v-theme-primary) !important;
-  cursor: pointer;
+}
+
+.image-preview {
+  width: 300px;
+  height: 200px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 8px; /* Add some space above the preview */
 }
 </style>
