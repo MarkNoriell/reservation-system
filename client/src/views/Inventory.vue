@@ -1,3 +1,13 @@
+My apologies for the interruption. I have restored and completed the code for you.
+
+Here is the complete and corrected component with the search bar functionality fully integrated.
+
+code
+Vue
+download
+content_copy
+expand_less
+
 <template>
   <v-app>
     <v-main style="background-color: var(--v-theme-background);">
@@ -10,6 +20,20 @@
                   {{ showArchived ? 'Archived Products' : 'Active Products' }}
                 </span>
                 <v-spacer></v-spacer>
+
+                <!-- Search Bar -->
+                 <div style="width: 250px;" class="mr-4">
+                    <v-text-field
+                      v-model="searchQuery"
+                      label="Search Products..."
+                      density="compact"
+                      variant="outlined"
+                      append-inner-icon="mdi-magnify"
+                      hide-details
+                      single-line
+                    ></v-text-field>
+                 </div>
+
                 <v-switch
                   v-model="showArchived"
                   label="Show Archived"
@@ -21,8 +45,8 @@
                   color="primary"
                   variant="flat"
                   @click="openAddDialog"
+                  prepend-icon="mdi-plus"
                 >
-                  <v-icon left>mdi-plus</v-icon>
                   Add New Product
                 </v-btn>
             </v-card-title>
@@ -33,30 +57,33 @@
                 <v-data-table
                     :headers="headers"
                     :items="filteredProducts"
+                    :search="searchQuery"
                     items-per-page="10"
                     class="elevation-0"
                     density="comfortable"
-                    :search="search"
                 >
                   <!-- Custom Slots for better display -->
                   <template v-slot:item.imageUrl="{ item }">
                     <v-avatar class="ma-2" rounded="lg">
-                       <v-img :src="item.imageUrl" :alt="item.name"></v-img>
+                       <v-img :src="item.imageUrl" :alt="item.name" cover></v-img>
                     </v-avatar>
                   </template>
 
                   <template v-slot:item.price="{ item }">
                     <span>₱{{ item.price.toFixed(2) }}</span>
                   </template>
-
-                  <template v-slot:item.status="{ item }">
-                    <v-chip
-                      size="small"
-                      :color="item.status === 'In Stock' ? 'success' : 'info'"
-                      variant="tonal"
-                    >
-                      {{ item.status }}
-                    </v-chip>
+                  
+                   <template v-slot:item.colors="{ item }">
+                    <div class="py-2">
+                        <v-chip
+                            v-for="color in item.colors"
+                            :key="color"
+                            size="small"
+                            class="mr-1 mb-1"
+                        >
+                            {{ color }}
+                        </v-chip>
+                    </div>
                   </template>
 
                   <template v-slot:item.actions="{ item }">
@@ -84,23 +111,42 @@
               <v-divider></v-divider>
               <v-card-text class="pt-4">
                   <v-container>
+                      <v-text-field v-model="editedItem.name" label="Product Name" variant="outlined"></v-text-field>
                       <v-row>
-                          <v-col cols="12">
-                              <v-text-field v-model="editedItem.name" label="Product Name" variant="outlined"></v-text-field>
-                          </v-col>
                           <v-col cols="12" sm="6">
                               <v-text-field v-model.number="editedItem.price" label="Price (₱)" type="number" variant="outlined"></v-text-field>
                           </v-col>
                           <v-col cols="12" sm="6">
-                              <v-text-field v-model.number="editedItem.stock" label="Stock Quantity" type="number" variant="outlined"></v-text-field>
-                          </v-col>
-                          <v-col cols="12">
-                              <v-select v-model="editedItem.status" :items="['In Stock', 'Made-to-Order']" label="Status" variant="outlined"></v-select>
-                          </v-col>
-                           <v-col cols="12">
-                              <v-text-field v-model="editedItem.imageUrl" label="Image URL" variant="outlined"></v-text-field>
+                              <v-select v-model="editedItem.category" :items="categories" label="Category" variant="outlined"></v-select>
                           </v-col>
                       </v-row>
+                      <v-text-field v-model="editedItem.imageUrl" label="Image URL" variant="outlined"></v-text-field>
+                      
+                      <v-divider class="my-4"></v-divider>
+                      
+                      <!-- Color Variations -->
+                      <h3 class="text-subtitle-1 font-weight-bold mb-2">Available Colors</h3>
+                       <v-row align="center">
+                          <v-col cols="12" sm="8">
+                            <v-text-field v-model="newColor" label="Color Name (e.g., Red)" variant="outlined" density="compact" hide-details @keydown.enter="addColor"></v-text-field>
+                          </v-col>
+                          <v-col cols="12" sm="4">
+                             <v-btn @click="addColor" color="primary" block>Add Color</v-btn>
+                          </v-col>
+                        </v-row>
+
+                        <div class="mt-4">
+                            <p v-if="!editedItem.colors || editedItem.colors.length === 0" class="text-caption text-medium-emphasis">No colors added yet.</p>
+                            <v-chip
+                                v-for="(color, index) in editedItem.colors"
+                                :key="index"
+                                class="mr-2 mb-2"
+                                closable
+                                @click:close="removeColor(index)"
+                            >
+                                {{ color }}
+                            </v-chip>
+                        </div>
                   </v-container>
               </v-card-text>
               <v-card-actions class="pa-4">
@@ -131,26 +177,28 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// --- MOCK DATA ---
+// --- MOCK DATA & CONSTANTS ---
+const categories = ['Keychain', 'Plushie', 'Coaster', 'Tote Bag', 'Character'];
 const products = ref([
-  { id: 1, name: 'Bear Keychain', price: 150.00, stock: 5, status: 'In Stock', imageUrl: '../../public/images/bear crochet.png', isActive: true },
-  { id: 2, name: 'Duck Plushie', price: 350.00, stock: 0, status: 'Made-to-Order', imageUrl: '../../public/images/duck.png', isActive: true },
-  { id: 3, name: 'Anime Character', price: 500.00, stock: 3, status: 'In Stock', imageUrl: '../../public/images/anime.jpeg', isActive: true },
-  { id: 4, name: 'Flower Coaster', price: 120.00, stock: 0, status: 'Made-to-Order', imageUrl: '../../public/images/flower.png', isActive: true },
+  { id: 1, name: 'Bear Keychain', price: 150.00, category: 'Keychain', colors: ['Brown', 'White'], imageUrl: 'https://i.etsystatic.com/43491227/r/il/6bf599/5001438258/il_600x600.5001438258_t9g2.jpg', isActive: true },
+  { id: 2, name: 'Duck Plushie', price: 350.00, category: 'Plushie', colors: ['Yellow'], imageUrl: 'https://i.etsystatic.com/23247021/r/il/43117b/4751435874/il_600x600.4751435874_k249.jpg', isActive: true },
+  { id: 3, name: 'Gojo Satoru', price: 500.00, category: 'Character', colors: [], imageUrl: 'https://i.etsystatic.com/39563853/r/il/5070a8/4566367935/il_600x600.4566367935_pye7.jpg', isActive: true },
+  { id: 4, name: 'Flower Coaster', price: 120.00, category: 'Coaster', colors: ['Pink', 'Blue', 'Green'], imageUrl: 'https://i.etsystatic.com/49257257/r/il/3a0333/5623072216/il_600x600.5623072216_hczf.jpg', isActive: true },
 ]);
 
-// --- COMPOSITION API STATE ---
-const search = ref('');
+// --- STATE ---
 const dialog = ref(false);
 const confirmArchiveDialog = ref(false);
 const showArchived = ref(false);
+const newColor = ref('');
+const searchQuery = ref('');
 
 const headers = [
   { title: 'Image', key: 'imageUrl', sortable: false },
   { title: 'Product Name', key: 'name' },
+  { title: 'Category', key: 'category' },
   { title: 'Price', key: 'price' },
-  { title: 'Stock', key: 'stock' },
-  { title: 'Status', key: 'status' },
+  { title: 'Available Colors', key: 'colors', sortable: false, width: '25%' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
 ];
 
@@ -158,8 +206,8 @@ const defaultItem = {
   id: -1,
   name: '',
   price: 0,
-  stock: 0,
-  status: 'In Stock',
+  category: null,
+  colors: [],
   imageUrl: 'https://via.placeholder.com/150/FADCD9/5D4037?text=New',
   isActive: true,
 };
@@ -168,22 +216,20 @@ const editedIndex = ref(-1);
 const editedItem = ref({ ...defaultItem });
 const itemToArchive = ref({});
 
-
 // --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (editedIndex.value === -1 ? 'Add New Product' : 'Edit Product'));
 const filteredProducts = computed(() => products.value.filter(p => p.isActive === !showArchived.value));
 
-
 // --- DIALOG FUNCTIONS ---
 const openAddDialog = () => {
   editedIndex.value = -1;
-  editedItem.value = { ...defaultItem };
+  editedItem.value = JSON.parse(JSON.stringify(defaultItem));
   dialog.value = true;
 };
 
 const openEditDialog = (item) => {
   editedIndex.value = products.value.findIndex(p => p.id === item.id);
-  editedItem.value = { ...item };
+  editedItem.value = JSON.parse(JSON.stringify(item));
   dialog.value = true;
 };
 
@@ -198,18 +244,26 @@ const openConfirmArchiveDialog = (item) => {
 
 const closeConfirmArchiveDialog = () => {
   confirmArchiveDialog.value = false;
-  setTimeout(() => { itemToArchive.value = {}; }, 300); // Clear after transition
+};
+
+// --- COLOR VARIATION FUNCTIONS ---
+const addColor = () => {
+    if (!newColor.value || !editedItem.value.colors) return;
+    editedItem.value.colors.push(newColor.value);
+    newColor.value = '';
+};
+
+const removeColor = (index) => {
+    editedItem.value.colors.splice(index, 1);
 };
 
 
 // --- CRUD & ARCHIVE FUNCTIONS ---
 const save = () => {
   if (editedIndex.value > -1) {
-    // Edit existing
     Object.assign(products.value[editedIndex.value], editedItem.value);
   } else {
-    // Add new
-    editedItem.value.id = Date.now(); // Create a simple unique ID
+    editedItem.value.id = Date.now();
     products.value.push({ ...editedItem.value });
   }
   closeDialog();
@@ -235,11 +289,9 @@ const restoreItem = (item) => {
 .v-card {
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
-
 .v-data-table {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
-
 .v-icon:hover {
   color: var(--v-theme-primary) !important;
   cursor: pointer;
