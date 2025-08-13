@@ -2,7 +2,12 @@ const { addProductModel, fetchProductsModel, updateProductsModel } = require('..
 
 exports.addProduct = async (req,res) => {
     try {
-        const productDetails = req.body
+        const fileBuffer = req.file?.buffer;
+        const mimeType = req.file?.mimetype;
+        let productDetails = req.body
+        productDetails.product_image = fileBuffer
+        productDetails.img_mime = mimeType
+        
         await addProductModel(productDetails)
         res.send({
             message:"Product added Succesfully!",

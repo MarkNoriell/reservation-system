@@ -2,12 +2,15 @@ const dbConnection = require('../dbConnection/dbConnection.js');
 const pool = dbConnection.connect();
 
 exports.addProductModel = (productDetails) => {
+    console.log(productDetails,"product details");
+    
     const { 
         product_category, 
         product_name,  
         product_price,
         product_colors,
         product_image,
+        img_mime,
         archived
     } = productDetails
 
@@ -18,10 +21,29 @@ exports.addProductModel = (productDetails) => {
                 return reject(err);
             }
 
-            const query = `INSERT INTO products (product_category, product_name, product_price, product_colors, product_image, archived) 
-            VALUES ('${product_category}', '${product_name}', ${product_price}, '${product_colors}', '${product_image}', '${archived}')`;
+            const query = `
+            INSERT INTO products (
+                product_category, 
+                product_name,  
+                product_price,
+                product_colors,
+                product_image,
+                img_mime,
+                archived
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
 
-            connection.query(query, (err, result) => {
+            const values = [
+            product_category,
+            product_name,
+            product_price,
+            product_colors,
+            product_image, // binary buffer
+            img_mime,
+            archived
+            ];
+
+            connection.query(query, values, (err, result) => {
                 connection.release();
 
                 if (err) {
