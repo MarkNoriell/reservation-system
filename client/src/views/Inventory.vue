@@ -54,8 +54,8 @@
                 >
                   <!-- Custom Slots for better display -->
                   <template v-slot:item.product_image="{ item }">
-                    <v-avatar class="ma-2 rounded-lg clickable-image" @click="enlargeImage(item.product_image)">
-                       <v-img :src="item.product_image" :alt="item.product_name" cover></v-img>
+                    <v-avatar class="ma-2 rounded-lg clickable-image" @click="enlargeImage(`http://localhost:3000/image/${item.product_id}`)">
+                       <v-img :src="`http://localhost:3000/image/${item.product_id}`" :alt="item.product_name" cover></v-img>
                     </v-avatar>
                   </template>
 
@@ -339,6 +339,10 @@ const save = async () => {
     products.value.push({ ...editedItem.value });
   }
 
+  if(editedItem.value.product_colors){
+    editedItem.value.product_colors = JSON.stringify(editedItem.value.product_colors)
+  }
+
   // Append product fields to FormData
   for (const [key, value] of Object.entries(editedItem.value)) {
     productImage.value.append(key, value);
@@ -383,7 +387,7 @@ const fetchProducts = async () => {
     const productsData = response.data.map(product => {
       return {
         ...product,
-        product_colors: JSON.parse(JSON.parse(product.product_colors))
+        product_colors: JSON.parse(product.product_colors)
       };
     });
 

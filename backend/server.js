@@ -46,14 +46,14 @@ app.post('/upload', upload.single('image'), (req, res) => {
 // Retrieve image by ID
 app.get('/image/:id', (req, res) => {
   db.query(
-    'SELECT image, mime_type FROM image_files WHERE id = ?',
+    'SELECT product_image, img_mime FROM products WHERE product_id = ?',
     [req.params.id],
     (err, results) => {
       if (err) throw err;
       if (!results.length) return res.status(404).send('Not found');
 
-      res.setHeader('Content-Type', results[0].mime_type);
-      res.send(results[0].image);
+      res.setHeader('Content-Type', results[0].img_mime);
+      res.send(results[0].product_image);
     }
   );
 });
