@@ -14,6 +14,9 @@ exports.addProductModel = (productDetails) => {
         archived
     } = productDetails
 
+    console.log("add product");
+    
+
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
@@ -89,9 +92,24 @@ exports.updateProductsModel = (updatedProductDetails) => {
         product_price,
         product_colors,
         product_image,
+        img_mime,
         archived
     } = updatedProductDetails
-    
+
+    const values = [
+        product_category,
+        product_name,
+        product_price,
+        product_colors,
+        product_image, // binary buffer
+        img_mime,
+        archived,
+        product_id
+    ];
+
+            console.log(product_id,"product_id edit");
+
+
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
@@ -100,15 +118,16 @@ exports.updateProductsModel = (updatedProductDetails) => {
             }
 
             const query = `UPDATE products
-                        SET product_category = '${product_category}',
-                        product_name = '${product_name}',
-                        product_price = '${product_price}',
-                        product_colors = '${product_colors}',
-                        product_image = '${product_image}',
-                        archived = '${archived}'
-                        WHERE product_id = '${product_id}'`;
+                SET product_category = ?,
+                product_name = ?,
+                product_price = ?,
+                product_colors = ?,
+                product_image = ?,
+                img_mime = ?,
+                archived = ?
+                WHERE product_id = ?`;
 
-            connection.query(query, (err, result) => {
+            connection.query(query,values, (err, result) => {
                 connection.release();
 
                 if (err) {

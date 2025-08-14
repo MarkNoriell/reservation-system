@@ -246,6 +246,7 @@ const sampleFile = ref({
 })
 
 let editDialog = ref(false)
+let toEditProduct = ref(false)
 
 const productImage = ref(null)
 
@@ -314,6 +315,7 @@ const openEditDialog = (item) => {
   sampleFile.value = { filename: '', imageData: '' };
   dialog.value = true;
   editDialog.value = true
+  toEditProduct.value = true
 };
 
 const closeDialog = () => {
@@ -345,9 +347,21 @@ const removeColor = (index) => {
 
 const handleSavingProduct = async (action,productPayload) => {
   if(action == 'Edit'){
+    try {
+      await axios.post("http://localhost:3000/api/updateProduct", productPayload, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+      });
+    } catch (error) {
+      console.error("Unable to edit product", error);
+      alert("Unable to add product!");
+    }
     console.log("Edit");
   }
   else if(action == 'Add'){
+    console.log("add");
+    
     try {
       await axios.post("http://localhost:3000/api/addProduct", productPayload, {
       headers: {
@@ -384,8 +398,8 @@ const save = async () => {
 
   let productPayload = null
 
-  if(editDialog.value){
-    productPayload = tmpEditedItem
+  if(toEditProduct.value){
+    productPayload = productImage.value ? productImage.value : tmpEditedItem
     handleSavingProduct('Edit',productPayload)
   }else{
     productPayload =  productImage.value

@@ -11,6 +11,6 @@ router.get("/fetchAccounts", fetchAccounts)
 router.post("/loginAccount", loginAccount)
 router.post("/addProduct", upload.single('image'), addProduct)
 router.get("/fetchProducts", fetchProducts)
-router.post("/updateProduct", updateProduct)
+router.post("/updateProduct",upload.single('image'), updateProduct)
 
 module.exports = router

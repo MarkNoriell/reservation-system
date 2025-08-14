@@ -28,8 +28,13 @@ exports.fetchProducts = async (req,res) => {
 
 exports.updateProduct = async (req,res) => {
     try {
-        const updatedProductDetails = req.body
-        await updateProductsModel(updatedProductDetails)
+        const fileBuffer = req.file?.buffer;
+        const mimeType = req.file?.mimetype;
+        let productDetails = req.body
+        productDetails.product_image = fileBuffer
+        productDetails.img_mime = mimeType
+
+        await updateProductsModel(productDetails)
         res.send({
             message:"Product updated Succesfully!",
         })
