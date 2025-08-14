@@ -77,7 +77,7 @@
                   </template>
 
                   <template v-slot:item.actions="{ item }">
-                    <div v-if="!item.archived">
+                    <div v-if="item.archived == 'false'">
                       <v-icon class="me-2" @click="openEditDialog(item)" color="grey-darken-1">mdi-pencil</v-icon>
                       <v-icon @click="openConfirmArchiveDialog(item)" color="error">mdi-archive-arrow-down</v-icon>
                     </div>
@@ -119,15 +119,23 @@
                           :show-size="true"
                         ></v-file-input>
                        <br>
-                      <img 
-                        v-if="previewImageSrc"
-                        :src="previewImageSrc" 
-                        :alt="sampleFile.filename || 'Product image'" 
+                       <img 
+                        v-if="previewImageSrc && !editDialog"
+                         :src="previewImageSrc" 
+                         :alt="sampleFile.filename || 'Product image'" 
+                         class="image-preview clickable-image" 
+                         contain
+                         @click="enlargeImage(previewImageSrc)"
+                       />
+                      <img
+                        v-else-if="previewImageSrc && editDialog" 
+                        :src="`http://localhost:3000/image/${editedItem.product_id}`"
+                        :alt="editedItem.product_name || 'Product zxc'" 
                         class="image-preview clickable-image" 
                         contain
-                        @click="enlargeImage(previewImageSrc)"
+                        @click="enlargeImage(`http://localhost:3000/image/${editedItem.product_id}`)"
                       />
-                      
+
                       <v-divider class="my-4"></v-divider>
                       
                       <!-- Color Variations -->
@@ -237,6 +245,8 @@ const sampleFile = ref({
   imageData:''
 })
 
+let editDialog = ref(false)
+
 const productImage = ref(null)
 
 const selectedFile = ref(null);
@@ -303,11 +313,14 @@ const openEditDialog = (item) => {
   editedItem.value = JSON.parse(JSON.stringify(item));
   sampleFile.value = { filename: '', imageData: '' };
   dialog.value = true;
+  editDialog.value = true
 };
 
 const closeDialog = () => {
   dialog.value = false;
   sampleFile.value = { filename: '', imageData: '' };
+  editDialog.value = false
+  selectedFile.value = null
 };
 
 const openConfirmArchiveDialog = (item) => {
@@ -330,35 +343,53 @@ const removeColor = (index) => {
     editedItem.value.product_colors.splice(index, 1);
 };
 
-// --- CRUD & ARCHIVE FUNCTIONS ---
-const save = async () => {
-  if (editedIndex.value > -1) {
-    Object.assign(products.value[editedIndex.value], editedItem.value);
-  } else {
-    editedItem.value.product_id = Date.now();
-    products.value.push({ ...editedItem.value });
+const handleSavingProduct = async (action,productPayload) => {
+  if(action == 'Edit'){
+    console.log("Edit");
   }
-
-  if(editedItem.value.product_colors){
-    editedItem.value.product_colors = JSON.stringify(editedItem.value.product_colors)
-  }
-
-  // Append product fields to FormData
-  for (const [key, value] of Object.entries(editedItem.value)) {
-    productImage.value.append(key, value);
-  }
-
-  console.log('Final FormData:', [...productImage.value.entries()]);
-  
-  try {
-    await axios.post("http://localhost:3000/api/addProduct", productImage.value, {
+  else if(action == 'Add'){
+    try {
+      await axios.post("http://localhost:3000/api/addProduct", productPayload, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    });
-  } catch (error) {
-    console.error("Unable to add product", error);
-    alert("Unable to add product!");
+      });
+    } catch (error) {
+      console.error("Unable to add product", error);
+      alert("Unable to add product!");
+    }
+  }
+}
+
+// --- CRUD & ARCHIVE FUNCTIONS ---
+const save = async () => {
+  let tmpEditedItem = { ...editedItem.value }
+
+  if (editedIndex.value > -1) {
+    Object.assign(products.value[editedIndex.value], tmpEditedItem);
+  } else {
+    tmpEditedItem.product_id = Date.now();
+    products.value.push({ ...tmpEditedItem});
+  }
+
+  if(tmpEditedItem.product_colors){
+    tmpEditedItem.product_colors = JSON.stringify(tmpEditedItem.product_colors)
+  }
+
+  if(productImage.value){
+    for (const [key, value] of Object.entries(tmpEditedItem)) {
+      productImage.value.append(key, value);
+    }
+  }
+
+  let productPayload = null
+
+  if(editDialog.value){
+    productPayload = tmpEditedItem
+    handleSavingProduct('Edit',productPayload)
+  }else{
+    productPayload =  productImage.value
+    handleSavingProduct('Add',productPayload)
   }
 
   closeDialog();
@@ -404,6 +435,12 @@ const fetchProducts = async () => {
 watch(selectedFile, (newFile) => {
   handleUpload()
 });
+
+watch(()=> previewImageSrc.value, (newValue, oldValue) => {
+  if(oldValue){
+    editDialog.value = false
+  }
+})
 
 onMounted(() => {
   fetchProducts()
