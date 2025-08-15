@@ -3,7 +3,7 @@
     <v-app-bar app color="transparent" flat class="px-md-12">
       <img src="../../public/images/Logo3.png" alt="PreServe logo" height="40" class="mr-3">
       <v-toolbar-title class="font-weight-bold text-h5" style="color: #5D4037;">
-        PreServe
+        ILUVMICA
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
@@ -23,12 +23,19 @@
             <v-img src="../../public/images/bear crochet.png" alt="Crochet Bear Keychain" contain height="250"></v-img>
           </v-col>
           <v-col cols="12" md="6">
-            <h1 class="text-h4 text-md-h3 font-weight-bold mb-4" style="color: #5D4037; line-height: 1.4;">
-              PreServe: A Web-Based Order Reservation and Management System for Iluvmica Crochet Cavite City
-            </h1>
-            <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;">
-              Shop Now
-            </v-btn>
+          <!-- THIS IS THE NEW HEADLINE -->
+          <h1 class="text-h4 text-md-h3 font-weight-bold mb-4" style="color: #5D4037; line-height: 1.4;">
+          Handcrafted with Heart, Reserved for You.
+          </h1>
+
+          <!-- THIS IS THE NEW SUB-HEADLINE -->
+          <p class="text-h6 font-weight-regular mb-8" style="color: #6D4C41;">
+          Discover unique, handcrafted crochet creations from Iluvmica. Reserve your next favorite piece today.
+          </p>
+
+          <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;">
+          Shop Now
+          </v-btn>
           </v-col>
         </v-row>
 
