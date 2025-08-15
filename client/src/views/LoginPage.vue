@@ -13,7 +13,7 @@
                 <div style="width: 80%; display: flex; flex-direction: column; gap: 20px;">
                     <v-text-field 
                         v-model="loginCredentials.username" 
-                        label="Username (Email)"
+                        label="Username"
                         hide-details="auto"
                         prepend-inner-icon="mdi-account" 
                         variant="outlined"

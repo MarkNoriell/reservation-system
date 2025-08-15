@@ -1,21 +1,5 @@
 <template>
   <v-app style="background-color: #FFF8F5;">
-    <v-app-bar app color="transparent" flat class="px-md-12">
-      <img src="../../public/images/Logo3.png" alt="PreServe logo" height="40" class="mr-3">
-      <v-toolbar-title class="font-weight-bold text-h5" style="color: #5D4037;">
-        ILUVMICA
-      </v-toolbar-title>
-
-      <v-spacer></v-spacer>
-
-      <v-btn text class="text-capitalize" style="color: #5D4037;">Home</v-btn>
-      <v-btn text class="text-capitalize" style="color: #5D4037;">Shop</v-btn>
-      <v-btn text class="text-capitalize" style="color: #5D4037;">Reservation</v-btn>
-      <v-btn text class="text-capitalize" style="color: #5D4037;">About</v-btn>
-      <v-btn text class="text-capitalize" style="color: #5D4037;">Contact</v-btn>
-
-    </v-app-bar>
-
     <v-main>
       <v-container class="py-12">
         <v-row align="center" justify="center" class="bg-pink-lighten-5 rounded-xl pa-12">
