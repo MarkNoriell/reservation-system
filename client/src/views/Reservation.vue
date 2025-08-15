@@ -370,7 +370,16 @@ const formatDate = (dateString) => {
 };
 
 const isDateAllowed = (date) => {
-  const dateString = date.toLocaleDateString('en-CA');
+  // --- Rule 1: Prevent Past Dates ---
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set time to midnight to compare days accurately
+  // The 'date' parameter from the picker is already a Date object
+  if (date < today) {
+    return false; // If the date is before today, disable it.
+  }
+
+  // --- Rule 2: Check Daily Limit (if Rule 1 passed) ---
+  const dateString = date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
   const count = dateCounts.value[dateString] || 0;
   return count < DAILY_RESERVATION_LIMIT;
 };
@@ -398,14 +407,25 @@ const formattedEditDate = computed(() => {
 });
 
 const isDateAllowedForEdit = (date) => {
-  const dateString = date.toLocaleDateString('en-CA');
+  const dateString = date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
 
-  // Allow the reservation's ORIGINAL date, regardless of the limit
-  if (editingReservation.value && formatDate(editingReservation.value.pickup_date) === formatDate(dateString)) {
-      return true;
+  // --- Rule 1: Always Allow the Original Date ---
+  // This lets the user keep the date, even if it's now in the past or full.
+  if (editingReservation.value) {
+      const originalDate = new Date(editingReservation.value.pickup_date).toLocaleDateString('en-CA');
+      if (originalDate === dateString) {
+          return true;
+      }
+  }
+  
+  // --- Rule 2: Prevent Past Dates (for any NEW date) ---
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date < today) {
+    return false;
   }
 
-  // Otherwise, check the limit
+  // --- Rule 3: Check Daily Limit (if other rules passed) ---
   const count = dateCounts.value[dateString] || 0;
   return count < DAILY_RESERVATION_LIMIT;
 };
