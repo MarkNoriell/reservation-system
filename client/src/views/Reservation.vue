@@ -82,80 +82,123 @@
           </v-card-text>
         </v-card>
       </v-container>
+
+          <!-- Add Reservation Dialog -->
+    <v-dialog v-model="isAddDialogVisible" max-width="500px" persistent>
+      <v-card class="rounded-lg">
+        <v-card-title><span class="font-weight-bold">New Reservation</span></v-card-title>
+        <v-card-text>
+          <v-form ref="addForm">
+            <v-text-field
+              v-model="newReservation.customer_name"
+              label="Customer Name"
+              variant="outlined"
+              density="compact"
+              :rules="validationRules.required"
+            ></v-text-field>
+            
+            <v-select
+              v-model="newReservation.product_id"
+              :items="products"
+              item-title="product_name"
+              item-value="product_id"
+              label="Product"
+              variant="outlined"
+              density="compact"
+              :rules="validationRules.required"
+            />
+
+            <v-select
+              v-model="newReservation.product_color"
+              :items="availableColors"
+              label="Color"
+              variant="outlined"
+              density="compact"
+              :disabled="!newReservation.product_id"
+              :rules="validationRules.required"
+            />
+
+            <v-text-field
+              v-model.number="newReservation.quantity"
+              label="Quantity"
+              type="number"
+              variant="outlined"
+              density="compact"
+              :rules="validationRules.quantity"
+            ></v-text-field>
+
+            <v-menu v-model="isDateMenuVisible" :close-on-content-click="false">
+              <template v-slot:activator="{ props }">
+                <v-text-field
+                  v-model="newReservation.pickup_date"
+                  label="Pick-up Date"
+                  prepend-inner-icon="mdi-calendar"
+                  readonly
+                  v-bind="props"
+                  variant="outlined"
+                  density="compact"
+                  :rules="validationRules.required"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                  v-model="newDateObject"
+                  :allowed-dates="isDateAllowed"
+                  @update:model-value="selectDate"
+              ></v-date-picker>
+            </v-menu>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="closeAddDialog">Cancel</v-btn>
+            <v-btn color="primary" variant="flat" @click="saveNewReservation">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
       
       <!-- Add/Edit Dialogs (similar to before, with key changes) -->
-      <v-dialog v-model="isAddDialogVisible" max-width="500px" persistent>
-        <v-card class="rounded-lg">
-          <v-card-title><span class="font-weight-bold">New Reservation</span></v-card-title>
-          <v-card-text>
-            <v-form ref="addForm">
-              <v-text-field
-                v-model="newReservation.customer_name"
-                label="Customer Name"
-                variant="outlined"
-                density="compact"
-                :rules="validationRules.required"
-              ></v-text-field>
-              
-              <v-select
-                v-model="newReservation.product_id"
-                :items="products"
-                item-title="product_name"
-                item-value="product_id"
-                label="Product"
-                variant="outlined"
-                density="compact"
-                :rules="validationRules.required"
-              />
-
-              <!-- NEW: Color Select -->
-              <v-select
-                v-model="newReservation.product_color"
-                :items="availableColors"
-                label="Color"
-                variant="outlined"
-                density="compact"
-                :disabled="!newReservation.product_id"
-                :rules="validationRules.required"
-              />
-
-              <v-text-field
-                v-model.number="newReservation.quantity"
-                label="Quantity"
-                type="number"
-                variant="outlined"
-                density="compact"
-                :rules="validationRules.quantity"
-              ></v-text-field>
-
-              <v-menu v-model="isDateMenuVisible" :close-on-content-click="false">
-                <template v-slot:activator="{ props }">
-                  <v-text-field
-                    v-model="newReservation.pickup_date"
-                    label="Pick-up Date"
-                    prepend-inner-icon="mdi-calendar"
-                    readonly
-                    v-bind="props"
-                    variant="outlined"
-                    density="compact"
-                    :rules="validationRules.required"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                    v-model="newDateObject"
-                    :allowed-dates="isDateAllowed"
-                    @update:model-value="selectDate"
-                ></v-date-picker>
-              </v-menu>
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn text @click="closeAddDialog">Cancel</v-btn>
-              <v-btn color="primary" variant="flat" @click="saveNewReservation">Save</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+<v-dialog v-model="isEditDialogVisible" max-width="400px" persistent>
+  <v-card class="rounded-lg">
+    <v-card-title>
+      <span class="font-weight-bold">Edit Pick-up Date</span>
+    </v-card-title>
+    <v-card-text class="pb-0">
+      <p class="mb-4">
+        Editing reservation for <strong>{{ editingReservation?.customer_name }}</strong>.
+      </p>
+        <v-menu
+          v-model="isDateMenuVisible"
+          :close-on-content-click="false"
+          location="center"
+        >
+          <template v-slot:activator="{ props }">
+            <v-text-field
+              :model-value="formattedEditDate"
+              label="Pick-up Date"
+              prepend-inner-icon="mdi-calendar"
+              readonly
+              v-bind="props"
+              variant="outlined"
+              density="compact"
+            ></v-text-field>
+          </template>
+          <v-date-picker
+            v-model="editableDate"
+            :allowed-dates="isDateAllowedForEdit"
+            @update:model-value="isDateMenuVisible = false"
+          ></v-date-picker>
+        </v-menu>
+        <p class="text-caption text-medium-emphasis mt-n2 mb-2">
+          Dates with {{ DAILY_RESERVATION_LIMIT }} or more reservations are disabled.
+        </p>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn text @click="closeEditDialog">Cancel</v-btn>
+      <v-btn color="primary" variant="flat" @click="saveDateChanges">Save</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
     </v-main>
   </v-app>
 </template>
@@ -178,6 +221,8 @@ const searchQuery = ref('');
 const addForm = ref(null);
 const newReservation = ref({});
 const newDateObject = ref(null);
+const editingReservation = ref(null);
+const editableDate = ref(null); 
 
 const availableColors = ref([]);
 
@@ -251,6 +296,22 @@ const updateStatus = async (item, newStatus) => {
     }
 };
 
+const saveDateChanges = async () => {
+  if (!editingReservation.value || !editableDate.value) return;
+  try {
+    const newDate = formattedEditDate.value; // YYYY-MM-DD
+    await axios.put(`${API_BASE_URL}/reservations/${editingReservation.value.reservation_id}/date`, { pickupDate: newDate });
+    
+    // Refresh all data to ensure consistency
+    await fetchReservations();
+    await fetchDateCounts();
+
+    closeEditDialog();
+  } catch (error) {
+    console.error("Error updating reservation date:", error);
+  }
+};
+
 const saveNewReservation = async () => {
   const { valid } = await addForm.value.validate();
   if (!valid) return;
@@ -276,7 +337,32 @@ const getStatusColor = (status) => {
 };
 
 const getDateColor = (dateString) => {
-    // ... (your existing logic is fine)
+  if (!dateString) return null;
+
+  // Get today's date and reset the time to the beginning of the day.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // --- THIS IS THE FIX ---
+  // Create the pickupDate object directly from the original string from the database.
+  const pickupDate = new Date(dateString);
+  // Also reset its time to the beginning of its day for a perfect comparison.
+  pickupDate.setHours(0, 0, 0, 0);
+  
+  // Check if the date is valid. If not, don't color it.
+  if (isNaN(pickupDate.getTime())) {
+    return null; 
+  }
+
+  // The rest of the logic is now guaranteed to work because pickupDate is valid.
+  const diffTime = pickupDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 1) {
+    return 'red';
+  }
+
+  return null;
 };
 
 const formatDate = (dateString) => {
@@ -303,6 +389,39 @@ const closeAddDialog = () => {
 const selectDate = (date) => {
     newReservation.value.pickup_date = date.toLocaleDateString('en-CA');
     isDateMenuVisible.value = false;
+};
+
+const formattedEditDate = computed(() => {
+    if (!editableDate.value) return '';
+    // Use toLocaleDateString('en-CA') to get the YYYY-MM-DD format
+    return new Date(editableDate.value).toLocaleDateString('en-CA');
+});
+
+const isDateAllowedForEdit = (date) => {
+  const dateString = date.toLocaleDateString('en-CA');
+
+  // Allow the reservation's ORIGINAL date, regardless of the limit
+  if (editingReservation.value && formatDate(editingReservation.value.pickup_date) === formatDate(dateString)) {
+      return true;
+  }
+
+  // Otherwise, check the limit
+  const count = dateCounts.value[dateString] || 0;
+  return count < DAILY_RESERVATION_LIMIT;
+};
+
+const openEditDialog = (item) => {
+  // Deep copy the item to avoid mutating the original data directly
+  editingReservation.value = JSON.parse(JSON.stringify(item));
+  // The Date constructor needs a properly formatted string to avoid timezone issues
+  editableDate.value = new Date(item.pickup_date); 
+  isEditDialogVisible.value = true;
+};
+
+const closeEditDialog = () => {
+  isEditDialogVisible.value = false;
+  editingReservation.value = null;
+  editableDate.value = null;
 };
 
 // --- LIFECYCLE HOOK ---
