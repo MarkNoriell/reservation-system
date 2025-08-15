@@ -21,6 +21,7 @@ const { getDashboardData } = require('../controller/dashboardController.js');
 
 // --- ADD these imports from your account controller ---
 const { 
+    loginAccount,
     getAllAccounts,
     addAccount,
     updateAccount,
@@ -52,6 +53,7 @@ router.get("/sales/top-selling", getTopSellingItems);
 router.get("/dashboard", getDashboardData);
 
 // --- ADD THESE NEW ACCOUNT MANAGEMENT ROUTES ---
+router.post("/loginAccount", loginAccount);
 router.get("/accounts", getAllAccounts);
 router.post("/accounts", addAccount);
 router.put("/accounts/:username", updateAccount); // Use username as the unique ID

@@ -13,6 +13,22 @@ exports.getAllAccountsModel = () => {
     });
 };
 
+exports.getAccountByUsernameModel = (username) => {
+    return new Promise((resolve, reject) => {
+        // We select all columns here, especially the `password` for comparison.
+        // We also check that the user is not deactivated (`deleted_date IS NULL`).
+        const query = "SELECT * FROM account WHERE username = ? AND deleted_date IS NULL";
+        
+        pool.query(query, [username], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            // `results` will be an array. We want the first (and only) item, or null if no user was found.
+            resolve(results[0] || null);
+        });
+    });
+};
+
 // Add a new user
 exports.addAccountModel = (details) => {
     return new Promise((resolve, reject) => {
