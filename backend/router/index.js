@@ -16,6 +16,8 @@ const {
     getReservationCountsByDate
 } = require('../controller/reservationsController.js');
 
+const { getSalesMetrics, getMonthlyRevenue, getTopSellingItems } = require('../controller/salesController.js');
+
 router.get("/fetchAccounts", fetchAccounts)
 router.post("/loginAccount", loginAccount)
 router.post("/addProduct", upload.single('image'), addProduct)
@@ -33,5 +35,10 @@ router.put("/reservations/:id/date", updateReservationDate);
 router.put("/archiveProduct/:id", archiveProduct);
 router.put("/restoreProduct/:id", restoreProduct);
 // --------------------------------
+
+// --- ADD THESE NEW SALES ROUTES ---
+router.get("/sales/metrics", getSalesMetrics);
+router.get("/sales/monthly-revenue", getMonthlyRevenue);
+router.get("/sales/top-selling", getTopSellingItems);
 
 module.exports = router

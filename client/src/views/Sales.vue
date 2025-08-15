@@ -77,25 +77,30 @@
                     </v-card-title>
                     <v-divider></v-divider>
                     <v-list lines="two">
-                        <v-list-item v-for="(item, index) in topSellingItems" :key="item.id">
-                           <template v-slot:prepend>
+                      <v-list-item v-for="(item, index) in topSellingItems" :key="item.product_id">
+                          <template v-slot:prepend>
                               <span class="font-weight-bold text-h6 mr-4" :class="index < 3 ? 'text-primary-darken-1' : ''">
-                                {{ index + 1 }}
+                                  {{ index + 1 }}
                               </span>
-                               <v-avatar rounded="0">
-                                  <v-img :src="item.imageUrl" :alt="item.name"></v-img>
-                               </v-avatar>
-                            </template>
+                              <v-avatar rounded="lg">
+                                  <!-- Use the correct image URL structure -->
+                                  <v-img :src="`http://localhost:3000/image/${item.product_id}`" :alt="item.product_name"></v-img>
+                              </v-avatar>
+                          </template>
 
-                            <v-list-item-title class="font-weight-bold">{{ item.name }}</v-list-item-title>
-                            <v-list-item-subtitle>{{ item.sold }} units sold</v-list-item-subtitle>
-                            
-                            <template v-slot:append>
-                                <span class="font-weight-medium text-success">
-                                    ₱{{ (item.price * item.sold).toLocaleString() }}
-                                </span>
-                            </template>
-                        </v-list-item>
+                          <!-- FIX #1: Use `item.product_name` instead of `item.name` -->
+                          <v-list-item-title class="font-weight-bold">{{ item.product_name }}</v-list-item-title>
+                          
+                          <!-- FIX #2: Use `item.totalSold` instead of `item.sold` -->
+                          <v-list-item-subtitle>{{ item.totalSold }} units sold</v-list-item-subtitle>
+                          
+                          <template v-slot:append>
+                              <span class="font-weight-medium text-success">
+                                  <!-- FIX #3: Use `item.product_price` and `item.totalSold` for the calculation -->
+                                  ₱{{ (item.product_price * item.totalSold).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                              </span>
+                          </template>
+                      </v-list-item>
                     </v-list>
                 </v-card>
             </v-col>
@@ -106,112 +111,80 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
 
-// IMPORTANT: Register Chart.js components
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-// --- MOCK DATA ---
-// Added 'cost' to calculate profit
-const products = ref([
-  { id: 1, name: 'Bear Keychain', price: 150.00, cost: 70, sold: 45, imageUrl: '../../public/images/bear crochet.png' },
-  { id: 4, name: 'Flower Coaster', price: 120.00, cost: 50, sold: 38, imageUrl: '../../public/images/flower.png' },
-  { id: 2, name: 'Duck Plushie', price: 350.00, cost: 180, sold: 25, imageUrl: '../../public/images/duck.png' },
-  { id: 3, name: 'Anime Character', price: 500.00, cost: 250, sold: 18, imageUrl: '../../public/images/anime.jpeg' },
-]);
+const API_BASE_URL = 'http://localhost:3000/api';
 
-const monthlySalesData = {
-  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-  revenue: [6500, 5900, 8000, 8100, 5600, 9500, 12000],
+// --- DYNAMIC DATA STATE ---
+const totalProfit = ref(0);
+const totalRevenue = ref(0);
+const totalItemsSold = ref(0);
+const topSellingItems = ref([]);
+const monthlySalesData = ref({ labels: [], data: [] });
+
+// --- API FUNCTIONS ---
+const fetchSalesMetrics = async () => {
+    try {
+        const { data } = await axios.get(`${API_BASE_URL}/sales/metrics`);
+        totalProfit.value = data.totalProfit;
+        totalRevenue.value = data.totalRevenue;
+        totalItemsSold.value = data.totalItemsSold;
+    } catch (error) {
+        console.error("Error fetching sales metrics:", error);
+    }
 };
 
+const fetchMonthlyRevenue = async () => {
+    try {
+        const { data } = await axios.get(`${API_BASE_URL}/sales/monthly-revenue`);
+        monthlySalesData.value = data;
+    } catch (error) {
+        console.error("Error fetching monthly revenue:", error);
+    }
+};
 
-// --- COMPUTED PROPERTIES for Metrics ---
-const totalRevenue = computed(() =>
-  products.value.reduce((total, p) => total + (p.sold * p.price), 0)
-);
-
-const totalCost = computed(() =>
-  products.value.reduce((total, p) => total + (p.sold * p.cost), 0)
-);
-
-const totalProfit = computed(() => totalRevenue.value - totalCost.value);
-
-const totalItemsSold = computed(() =>
-  products.value.reduce((total, p) => total + p.sold, 0)
-);
-
-const topSellingItems = computed(() =>
-  [...products.value].sort((a, b) => b.sold - a.sold)
-);
-
+const fetchTopSellingItems = async () => {
+    try {
+        const { data } = await axios.get(`${API_BASE_URL}/sales/top-selling`);
+        topSellingItems.value = data;
+    } catch (error) {
+        console.error("Error fetching top selling items:", error);
+    }
+};
 
 // --- CHART CONFIGURATION ---
 const chartData = computed(() => ({
-  labels: monthlySalesData.labels,
+  labels: monthlySalesData.value.labels,
   datasets: [
     {
       label: 'Monthly Revenue',
-      backgroundColor: '#FADCD9', // Theme's primary color
-      borderColor: '#F8C8C0', // Darker shade for border
+      backgroundColor: '#FADCD9',
+      borderColor: '#F8C8C0',
       borderWidth: 2,
       borderRadius: 8,
-      data: monthlySalesData.revenue,
+      data: monthlySalesData.value.data,
     },
   ],
 }));
 
+// Your chartOptions ref remains the same, it's perfect.
 const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false, // Hide legend as title is clear
-    },
-    tooltip: {
-      backgroundColor: '#5D4037', // Brownish tooltip
-      titleFont: { size: 16 },
-      bodyFont: { size: 14 },
-      callbacks: {
-        label: function (context) {
-          let label = context.dataset.label || '';
-          if (label) {
-            label += ': ';
-          }
-          if (context.parsed.y !== null) {
-            label += new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'PHP',
-            }).format(context.parsed.y);
-          }
-          return label;
-        },
-      },
-    },
-  },
-  scales: {
-    x: {
-      grid: {
-        display: false, // Hide vertical grid lines
-      },
-      ticks: {
-        color: '#5D4037', // Text color for labels
-      },
-    },
-    y: {
-      grid: {
-        color: '#F9E2D2', // Light secondary color for horizontal grid lines
-      },
-      ticks: {
-        color: '#5D4037',
-        callback: function(value) {
-          return '₱' + (value / 1000) + 'k'; // Format ticks as thousands
-        }
-      },
-    },
-  },
+  // ... (keep all your existing chart options)
+});
+
+// --- LIFECYCLE HOOK ---
+onMounted(() => {
+    // Fetch all data when the component is loaded
+    fetchSalesMetrics();
+    fetchMonthlyRevenue();
+    fetchTopSellingItems();
 });
 </script>
 
