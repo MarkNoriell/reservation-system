@@ -3,10 +3,15 @@
     <v-app-bar app>
       <v-app-bar-nav-icon @click="drawer = !drawer" />
       <v-toolbar-title class="cursorPointer" @click="changePath('/')">ILUVMICA CROCHET</v-toolbar-title>
+
+      <v-spacer/>
+      <p style="margin-right: 2%;">
+        Hello, <span style="font-weight: bold; color:palevioletred;"> {{ usePersistStore.accountCredentials.username }}! </span>
+      </p>
     </v-app-bar>
 
     <v-navigation-drawer v-model="drawer" app temporary>
-      <v-list v-for="(item,index) of navItems" :index="index">
+      <v-list v-for="(item,index) of filterNavItems(navItems,usePersistStore.accountCredentials.access_rights)" :index="index">
         <v-list-item @click="changePath(item.path)">
             <div class="cursorPointer" style="display: flex; gap:10px;">
                  <v-icon>{{ item.icon }}</v-icon>{{ item.title }}
@@ -58,6 +63,19 @@ const navItems = ref([
       path: 'logout'
     }
 ])
+
+const filterNavItems = (navItems,accessRights) => {
+  console.log(accessRights,"accessRights");
+  
+  return navItems.filter((items) => {
+    if(accessRights == 'User'){
+      return items.title == 'Logout'
+    }
+    else{
+      return items
+    }
+  })
+}
 
 const changePath = (path) => {
   if(path == 'logout'){
