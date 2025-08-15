@@ -1,21 +1,3 @@
-Of course! Adding a search bar is a great way to make the reservations list easier to navigate. I've integrated a search field into the component for you.
-
-Key Changes:
-
-Search Bar UI: A new v-text-field has been added to the card's title section. It's positioned between the title and the "New Reservation" button and includes a search icon for a clean look.
-
-Search State: A ref named searchQuery has been created to store the user's search input.
-
-v-data-table Integration: The v-data-table is now bound to the searchQuery via its built-in :search prop. This allows the table to automatically filter the data based on the user's input across all fields, including customer name, product, and status.
-
-Here is the complete code with the added search functionality:
-
-code
-Vue
-download
-content_copy
-expand_less
-
 <template>
   <v-app>
     <v-main style="background-color: var(--v-theme-background);">
@@ -125,13 +107,20 @@ expand_less
                 density="compact"
                 :rules="validationRules.required"
               ></v-text-field>
-              <v-text-field
+              <v-select
+                v-model="newReservation.product"
+                :items="productList"
+                label="Products"
+                variant="outlined"
+                density="compact"
+              />
+              <!-- <v-text-field
                 v-model="newReservation.product"
                 label="Product"
                 variant="outlined"
                 density="compact"
                 :rules="validationRules.required"
-              ></v-text-field>
+              ></v-text-field> -->
               <v-text-field
                 v-model.number="newReservation.quantity"
                 label="Quantity"
@@ -224,7 +213,8 @@ expand_less
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios'
 
 // --- CONSTANTS & STATE ---
 const DAILY_RESERVATION_LIMIT = 5;
@@ -295,6 +285,28 @@ const getStatusColor = (status) => {
     case 'Pending': return 'warning';
     case 'Cancelled': return 'error';
     default: return 'grey';
+  }
+};
+
+let productList = ref([])
+
+const fetchProducts = async () => {
+  try {
+    const response = await axios.get("http://localhost:3000/api/fetchProducts");
+
+    const productsData = response.data.map(product => {
+      // return {
+      //   ...product,
+      //   product_colors: JSON.parse(product.product_colors)
+      // };
+      return product.product_name
+    });
+   
+    productList.value = productsData;
+
+  } catch (error) {
+    console.error("Unable to fetch products!", error);
+    alert("Unable to fetch products!");
   }
 };
 
@@ -372,6 +384,10 @@ const saveChanges = () => {
   }
   closeEditDialog();
 };
+
+onMounted(()=>{
+  fetchProducts()
+})
 </script>
 
 <style scoped>
