@@ -400,12 +400,13 @@ const save = async () => {
 
   if(toEditProduct.value){
     productPayload = productImage.value ? productImage.value : tmpEditedItem
-    handleSavingProduct('Edit',productPayload)
+    await handleSavingProduct('Edit',productPayload)
   }else{
     productPayload =  productImage.value
-    handleSavingProduct('Add',productPayload)
+    await handleSavingProduct('Add',productPayload)
   }
 
+  fetchProducts()
   closeDialog();
 };
 
@@ -428,16 +429,14 @@ const restoreItem = (item) => {
 const fetchProducts = async () => {
   try {
     const response = await axios.get("http://localhost:3000/api/fetchProducts");
-    
+
     const productsData = response.data.map(product => {
       return {
         ...product,
         product_colors: JSON.parse(product.product_colors)
       };
     });
-
-    console.log(productsData,"productsData");
-    
+   
     products.value = productsData;
 
   } catch (error) {
