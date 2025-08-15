@@ -1,165 +1,161 @@
 <template>
-      <v-container fluid>
-        <h1 class="text-h4 font-weight-bold mb-6" style="color: var(--v-theme-text);">Dashboard</h1>
+  <v-container fluid>
+    <h1 class="text-h4 font-weight-bold mb-6" style="color: var(--v-theme-text);">Dashboard</h1>
 
-        <!-- Main Stats Cards -->
-        <v-row>
-          <!-- Sales Card -->
-          <v-col cols="12" md="6">
-            <v-card class="rounded-lg pa-2" elevation="2">
-              <v-card-title class="d-flex align-center">
-                <v-icon icon="mdi-currency-php" class="mr-3" color="success" size="large"></v-icon>
-                <span class="font-weight-bold text-subtitle-1" style="color: var(--v-theme-text);">Total Sales</span>
-              </v-card-title>
-              <v-card-text>
-                <p class="text-h4 font-weight-bold" style="color: var(--v-theme-text);">
-                  ₱{{ totalSales.toLocaleString() }}
-                </p>
-                <p class="text-caption text-medium-emphasis">Across all products</p>
-              </v-card-text>
+    <!-- Main Stats Cards -->
+    <v-row>
+      <!-- Total Profit Card -->
+      <v-col cols="12" md="6">
+        <v-card class="rounded-lg pa-2 clickable-card" elevation="2" @click="goTo('/sales')">
+          <v-card-title class="d-flex align-center">
+            <v-icon icon="mdi-cash-multiple" class="mr-3" color="success" size="large"></v-icon>
+            <span class="font-weight-bold text-subtitle-1">Total Profit</span>
+          </v-card-title>
+          <v-card-text>
+            <p class="text-h4 font-weight-bold">
+              ₱{{ totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+            </p>
+            <p class="text-caption text-medium-emphasis">From completed reservations</p>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <!-- Top Selling Product Card -->
+      <v-col cols="12" md="6">
+        <v-card class="rounded-lg pa-2 clickable-card" elevation="2" @click="goTo('/sales')">
+          <v-card-title class="d-flex align-center">
+            <v-icon icon="mdi-trophy-award" class="mr-3" color="warning" size="large"></v-icon>
+            <span class="font-weight-bold text-subtitle-1">Top Selling Product</span>
+          </v-card-title>
+          <v-card-text class="text-center">
+              <v-avatar size="80" rounded="lg" class="mb-2">
+                <v-img 
+                  :src="`http://localhost:3000/image/${topSeller.product_id}`" 
+                  :alt="topSeller.product_name"
+                  v-if="topSeller.product_id"
+                ></v-img>
+                <v-icon v-else icon="mdi-package-variant" size="50"></v-icon>
+              </v-avatar>
+              <p class="text-h6 font-weight-bold mb-1">
+                {{ topSeller.product_name }}
+              </p>
+              <v-chip color="primary" size="small">{{ topSeller.totalSold }} units sold</v-chip>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+    
+    <v-row>
+        <!-- Pending Reservations -->
+        <v-col cols="12" md="6">
+            <v-card class="rounded-lg clickable-card" elevation="2" @click="goTo('/reservation')">
+                <v-card-title class="d-flex align-center">
+                    <v-icon icon="mdi-calendar-clock" class="mr-3" size="large" color="primary-darken-1"></v-icon>
+                    <span class="font-weight-bold text-h6">Pending Reservations</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-data-table
+                        :headers="reservationHeaders"
+                        :items="pendingReservations"
+                        items-per-page="5"
+                        density="comfortable"
+                    >
+                        <template v-slot:item.reservation_status="{ item }">
+                            <v-chip color="warning" variant="elevated" size="small">{{ item.reservation_status }}</v-chip>
+                        </template>
+                    </v-data-table>
+                </v-card-text>
             </v-card>
-          </v-col>
+        </v-col>
 
-          <!-- Top Selling Product Card -->
-          <v-col cols="12" md="6">
-            <v-card class="rounded-lg pa-2" elevation="2">
-              <v-card-title class="d-flex align-center">
-                <v-icon icon="mdi-trophy-award" class="mr-3" color="warning" size="large"></v-icon>
-                <span class="font-weight-bold text-subtitle-1" style="color: var(--v-theme-text);">Top Selling Product</span>
-              </v-card-title>
-              <v-card-text class="text-center">
-                  <v-avatar size="80" rounded="0" class="mb-2">
-                    <!-- Placeholder for product image -->
-                    <v-img :src="`/images/flower.png`" :alt="topSeller.name"></v-img>
-                  </v-avatar>
-                  <p class="text-h6 font-weight-bold mb-1" style="color: var(--v-theme-text);">
-                    {{ topSeller.name }}
-                  </p>
-                  <v-chip color="primary" size="small">{{ topSeller.sold }} units sold</v-chip>
-              </v-card-text>
+        <!-- Active Products -->
+        <v-col cols="12" md="6">
+            <v-card class="rounded-lg clickable-card" elevation="2" @click="goTo('/inventory')">
+                <v-card-title class="d-flex align-center">
+                    <v-icon icon="mdi-package-variant-closed" class="mr-3" size="large" color="primary-darken-1"></v-icon>
+                    <span class="font-weight-bold text-h6">Active Products</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-data-table
+                        :headers="activeProductsHeader"
+                        :items="activeProducts"
+                        items-per-page="5"
+                        density="comfortable"
+                    >
+                      <template v-slot:item.product_price="{ item }">
+                          ₱{{ item.product_price.toFixed(2) }}
+                      </template>
+                    </v-data-table>
+                </v-card-text>
             </v-card>
-          </v-col>
-        </v-row>
-        
-        <v-row>
-            <!-- Pending Reservations -->
-            <v-col cols="12" md="6">
-                <v-card class="rounded-lg" elevation="2">
-                    <v-card-title class="d-flex align-center">
-                        <v-icon icon="mdi-calendar-clock" class="mr-3" size="large" color="primary-darken-1"></v-icon>
-                        <span class="font-weight-bold text-h6" style="color: var(--v-theme-text);">Pending Reservations</span>
-                    </v-card-title>
-                    <v-card-text>
-                        <v-data-table
-                            :headers="reservationHeaders"
-                            :items="reservations"
-                            items-per-page="5"
-                            class="elevation-0"
-                            density="comfortable"
-                        >
-                            <template v-slot:item.status="{ item }">
-                                <v-chip color="secondary-darken-1" variant="elevated" size="small">{{ item.status }}</v-chip>
-                            </template>
-                        </v-data-table>
-                    </v-card-text>
-                </v-card>
-            </v-col>
-
-            <!-- Active Products -->
-            <v-col cols="12" md="6">
-                <v-card class="rounded-lg" elevation="2">
-                    <v-card-title class="d-flex align-center">
-                        <v-icon icon="mdi-package-variant-closed" class="mr-3" size="large" color="primary-darken-1"></v-icon>
-                        <span class="font-weight-bold text-h6" style="color: var(--v-theme-text);">Active Products</span>
-                    </v-card-title>
-                    <v-card-text>
-                        <v-data-table
-                            :headers="activeProductsHeader"
-                            :items="products"
-                            items-per-page="5"
-                            class="elevation-0"
-                            density="comfortable"
-                        >
-                          <template v-slot:item.status="{ item }">
-                              <v-chip :color="item.stock > 0 ? 'success' : 'info'" size="small" variant="tonal">
-                                  {{ item.status }}
-                              </v-chip>
-                          </template>
-                          <template v-slot:item.price="{ item }">
-                              ₱{{ item.price.toFixed(2) }}
-                          </template>
-                        </v-data-table>
-                    </v-card-text>
-                </v-card>
-            </v-col>
-        </v-row>
-
-      </v-container>
+        </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
 
-// --- MOCK DATA ---
-// This data can be replaced with API calls in a real application.
-const products = ref([
-  { id: 1, name: 'Bear Keychain', price: 150.00, stock: 5, sold: 25, status: 'In Stock' },
-  { id: 2, name: 'Duck Plushie', price: 350.00, stock: 0, sold: 18, status: 'Made-to-Order' },
-  { id: 3, name: 'Anime Character', price: 500.00, stock: 3, sold: 12, status: 'In Stock' },
-  { id: 4, name: 'Flower Coaster', price: 120.00, stock: 0, sold: 30, status: 'Made-to-Order' },
-  { id: 5, name: 'Crochet Octopus', price: 250.00, stock: 8, sold: 15, status: 'In Stock' },
-  { id: 6, name: 'Tote Bag', price: 800.00, stock: 2, sold: 9, status: 'In Stock' },
-]);
+const API_BASE_URL = 'http://localhost:3000/api';
+const router = useRouter();
 
-const reservations = ref([
-  { id: 101, customer: 'Juan Dela Cruz', product: 'Bear Keychain', quantity: 2, status: 'Pending' },
-  { id: 102, customer: 'Maria Clara', product: 'Flower Coaster', quantity: 5, status: 'Pending' },
-  { id: 103, customer: 'Jose Rizal', product: 'Tote Bag', quantity: 1, status: 'Pending' },
-  { id: 104, customer: 'Gabriela Silang', product: 'Duck Plushie', quantity: 3, status: 'Pending' },
-]);
-
-
-// --- COMPUTED PROPERTIES ---
-
-// Calculate total sales
-const totalSales = computed(() => {
-  return products.value.reduce((total, product) => total + (product.sold * product.price), 0);
-});
-
-// Find the top-selling product
-const topSeller = computed(() => {
-  return [...products.value].sort((a, b) => b.sold - a.sold)[0];
-});
-
-// Find items with low stock (e.g., stock < 5 and not made-to-order)
-const lowStockItems = computed(() => {
-  return products.value.filter(p => p.stock > 0 && p.stock < 5);
-});
-
+// --- STATE ---
+const totalProfit = ref(0);
+const topSeller = ref({ product_name: 'N/A', totalSold: 0 });
+const pendingReservations = ref([]);
+const activeProducts = ref([]);
 
 // --- DATA TABLE HEADERS ---
-
 const reservationHeaders = [
-  { title: 'Customer', key: 'customer', sortable: false },
-  { title: 'Product', key: 'product', sortable: false },
+  { title: 'Customer', key: 'customer_name', sortable: false },
+  { title: 'Product', key: 'product_name', sortable: false },
   { title: 'Quantity', key: 'quantity', align: 'end' },
-  { title: 'Status', key: 'status', align: 'center', sortable: false },
+  { title: 'Status', key: 'reservation_status', align: 'center', sortable: false },
 ];
 
 const activeProductsHeader = [
-    { title: 'Product Name', key: 'name', sortable: true },
-    { title: 'Price', key: 'price', align: 'end' },
+    { title: 'Product Name', key: 'product_name', sortable: true },
+    { title: 'Price', key: 'product_price', align: 'end' },
 ];
 
+// --- API FUNCTION ---
+const fetchDashboardData = async () => {
+    try {
+        const { data } = await axios.get(`${API_BASE_URL}/dashboard`);
+        totalProfit.value = data.totalProfit;
+        topSeller.value = data.topSeller;
+        pendingReservations.value = data.pendingReservations;
+        activeProducts.value = data.activeProducts;
+    } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+    }
+};
+
+// --- NAVIGATION ---
+const goTo = (path) => {
+    router.push(path);
+};
+
+// --- LIFECYCLE HOOK ---
+onMounted(() => {
+    fetchDashboardData();
+});
 </script>
 
 <style scoped>
-/* Scoped styles for custom adjustments */
 .v-card {
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
-
-/* Ensure data tables match the theme */
+.clickable-card {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.clickable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
 .v-data-table {
     background-color: transparent !important;
 }

@@ -18,6 +18,8 @@ const {
 
 const { getSalesMetrics, getMonthlyRevenue, getTopSellingItems } = require('../controller/salesController.js');
 
+const { getDashboardData } = require('../controller/dashboardController.js');
+
 router.get("/fetchAccounts", fetchAccounts)
 router.post("/loginAccount", loginAccount)
 router.post("/addProduct", upload.single('image'), addProduct)
@@ -40,5 +42,7 @@ router.put("/restoreProduct/:id", restoreProduct);
 router.get("/sales/metrics", getSalesMetrics);
 router.get("/sales/monthly-revenue", getMonthlyRevenue);
 router.get("/sales/top-selling", getTopSellingItems);
+
+router.get("/dashboard", getDashboardData);
 
 module.exports = router
