@@ -316,9 +316,21 @@ const saveProduct = async () => {
 
   loadingAction.value = true;
   const formData = new FormData();
-  // Simplified formData appending
-  Object.keys(editedItem.value).forEach(key => {
-    const value = editedItem.value[key];
+
+  // --- THIS IS THE FIX ---
+  // Create a clean payload object by destructuring `editedItem`.
+  // This explicitly removes the old image data and the client-side imageVersion
+  // before we prepare the data to be sent.
+  const { 
+    product_image, 
+    img_mime, 
+    imageVersion, 
+    ...detailsToSubmit 
+  } = editedItem.value;
+
+  // Now, loop over the CLEAN `detailsToSubmit` object.
+  Object.keys(detailsToSubmit).forEach(key => {
+    const value = detailsToSubmit[key];
     if (key === 'product_colors') {
       formData.append(key, JSON.stringify(value));
     } else if (value !== null && value !== undefined) {
@@ -326,6 +338,7 @@ const saveProduct = async () => {
     }
   });
 
+  // This part remains the same: ONLY append a new image if the user selected one.
   if (selectedFile.value) {
     formData.append('image', selectedFile.value);
   }
