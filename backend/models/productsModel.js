@@ -67,25 +67,26 @@ exports.fetchProductsModel = () => {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
-                console.error("Something went wrong getting connection in database!", err);
+                console.error("DB connection error!", err);
                 return reject(err);
             }
 
-            const query = `SELECT * FROM products WHERE archived = 'false'`;
+            // --- THE FIX ---
+            // This query now fetches ALL products, allowing the frontend
+            // to handle the filtering between active and archived.
+            const query = `SELECT * FROM products`;
 
             connection.query(query, (err, result) => {
                 connection.release();
-
                 if (err) {
-                    console.error("Database query error!", err);
+                    console.error("DB query error!", err);
                     return reject(err);
                 }
-
                 resolve(result);
             });
         });
     });
-}
+};
 
 // productsModel.js
 
@@ -159,6 +160,47 @@ exports.updateProductsModel = (productDetails) => {
                 connection.release();
                 if (err) {
                     console.error("Database query error!", err);
+                    return reject(err);
+                }
+                resolve(result);
+            });
+        });
+    });
+};
+
+exports.archiveProductModel = (productId) => {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error("DB connection error!", err);
+                return reject(err);
+            }
+            const query = "UPDATE products SET archived = 'true' WHERE product_id = ?";
+            connection.query(query, [productId], (err, result) => {
+                connection.release();
+                if (err) {
+                    console.error("DB query error!", err);
+                    return reject(err);
+                }
+                resolve(result);
+            });
+        });
+    });
+};
+
+// --- ADD THIS NEW MODEL FUNCTION ---
+exports.restoreProductModel = (productId) => {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error("DB connection error!", err);
+                return reject(err);
+            }
+            const query = "UPDATE products SET archived = 'false' WHERE product_id = ?";
+            connection.query(query, [productId], (err, result) => {
+                connection.release();
+                if (err) {
+                    console.error("DB query error!", err);
                     return reject(err);
                 }
                 resolve(result);

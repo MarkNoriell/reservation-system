@@ -84,17 +84,18 @@
                     </div>
                   </template>
 
-                  <template v-slot:item.actions="{ item }">
-                    <div v-if="item.archived.toString() == 'false' || !item.archived">
-                      <v-icon class="me-2" @click="openEditDialog(item)" color="grey-darken-1">mdi-pencil</v-icon>
-                      <v-icon @click="openConfirmArchiveDialog(item)" color="error">mdi-archive-arrow-down</v-icon>
-                    </div>
-                    <div v-else>
-                      <v-btn small variant="outlined" color="success" @click="restoreProduct(item)">
-                        Restore
-                      </v-btn>
-                    </div>
-                  </template>
+                <template v-slot:item.actions="{ item }">
+                  <!-- CORRECTED AND SIMPLIFIED LOGIC -->
+                  <div v-if="!item.archived">
+                    <v-icon class="me-2" @click="openEditDialog(item)" color="grey-darken-1">mdi-pencil</v-icon>
+                    <v-icon @click="openConfirmArchiveDialog(item)" color="error">mdi-archive-arrow-down</v-icon>
+                  </div>
+                  <div v-else>
+                    <v-btn small variant="outlined" color="success" @click="restoreProduct(item)">
+                      Restore
+                    </v-btn>
+                  </div>
+                </template>
                 </v-data-table>
             </v-card-text>
         </v-card>
@@ -230,24 +231,21 @@ const API_BASE_URL = 'http://localhost:3000/api';
 // --- STATE MANAGEMENT ---
 const products = ref([]);
 const categories = ['Keychain', 'Plushie', 'Coaster', 'Tote Bag', 'Character'];
-
 const dialog = ref(false);
 const confirmArchiveDialog = ref(false);
 const imageDialog = ref(false);
-const showArchived = ref(false);
+const showArchived = ref(false); // This is a boolean
 const loadingAction = ref(false);
 const loadingTable = ref(false);
-
 const searchQuery = ref('');
 const newColor = ref('');
 const enlargedImageUrl = ref('');
 const imagePreviewUrl = ref(null);
-const selectedFile = ref(null); // This will hold the File object
-
+const selectedFile = ref(null);
 const editedIndex = ref(-1);
 const editedItem = ref({});
 const itemToArchive = ref({});
-const formErrors = ref({}); 
+const formErrors = ref({});
 
 const defaultItem = {
   product_name: '',
@@ -258,15 +256,6 @@ const defaultItem = {
   archived: false,
 };
 
-// --- Snackbar State ---
-const snackbar = ref({
-  show: false,
-  text: '',
-  color: 'success',
-});
-
-
-// --- HEADERS for v-data-table ---
 const headers = [
   { title: 'Image', key: 'product_image', sortable: false },
   { title: 'Product Name', key: 'product_name' },
@@ -279,28 +268,32 @@ const headers = [
 
 // --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (editedIndex.value === -1 ? 'Add New Product' : 'Edit Product'));
-const filteredProducts = computed(() => products.value.filter(p => p.archived === showArchived.value));
+
+// --- THIS IS THE DEFINITIVE FIX ---
+// We are now comparing a boolean (p.archived) to a boolean (showArchived.value).
+// This is the correct and only way to do it.
+const filteredProducts = computed(() => {
+  return products.value.filter((p) => {
+    return p.archived === showArchived.value
+  });
+});
+
 
 // --- API FUNCTIONS ---
 const fetchProducts = async () => {
   loadingTable.value = true;
   try {
     const response = await axios.get(`${API_BASE_URL}/fetchProducts`);
-    
     products.value = response.data.map(product => {
+      // This normalization is ESSENTIAL and CORRECT.
       const isArchived = product.archived === 'true' || product.archived === 1 || product.archived === true;
-      
       return {
         ...product,
         product_colors: typeof product.product_colors === 'string' ? JSON.parse(product.product_colors || '[]') : [],
-        archived: isArchived,
-        // --- THIS IS THE FIX ---
-        // Add a unique, client-side version key to each product object
-        // Every time we fetch, this timestamp will be new.
-        imageVersion: Date.now() 
+        archived: isArchived, // Guarantees p.archived is a boolean
+        imageVersion: Date.now()
       };
     });
-
   } catch (error) {
     console.error("Error fetching products:", error);
   } finally {
@@ -309,75 +302,44 @@ const fetchProducts = async () => {
 };
 
 const validateForm = () => {
-  // Clear previous errors
   formErrors.value = {};
-
   const { product_name, product_cost, product_price } = editedItem.value;
-
-  if (!product_name) {
-    formErrors.value.product_name = 'Product name is required.';
-  }
-  if (product_cost <= 0) {
-    formErrors.value.product_cost = 'Product cost must be greater than zero.';
-  }
-  if (product_price <= 0) {
-    formErrors.value.product_price = 'Product price must be greater than zero.';
-  }
-  
-  // THE KEY VALIDATION: Price must be >= Cost
-  if (product_price < product_cost) {
-    formErrors.value.product_price = 'Price cannot be lower than the cost.';
-  }
-
-  // Return true if there are no errors, false otherwise
+  if (!product_name) formErrors.value.product_name = 'Product name is required.';
+  if (!product_cost || product_cost <= 0) formErrors.value.product_cost = 'Product cost must be greater than zero.';
+  if (!product_price || product_price <= 0) formErrors.value.product_price = 'Product price must be greater than zero.';
+  if (product_price < product_cost) formErrors.value.product_price = 'Price cannot be lower than the cost.';
   return Object.keys(formErrors.value).length === 0;
 };
 
 const saveProduct = async () => {
-
-    // --- VALIDATION STEP ---
-  if (!validateForm()) {
-    // If validation fails, do not proceed. The errors are already displayed.
-    return;
-  }
-  // --- END VALIDATION ---
+  if (!validateForm()) return;
 
   loadingAction.value = true;
-  
   const formData = new FormData();
+  // Simplified formData appending
+  Object.keys(editedItem.value).forEach(key => {
+    const value = editedItem.value[key];
+    if (key === 'product_colors') {
+      formData.append(key, JSON.stringify(value));
+    } else if (value !== null && value !== undefined) {
+      formData.append(key, value);
+    }
+  });
 
-  // Append product details
-  formData.append('product_name', editedItem.value.product_name);
-  formData.append('product_category', editedItem.value.product_category);
-  formData.append('product_cost', editedItem.value.product_cost);
-  formData.append('product_price', editedItem.value.product_price);
-  formData.append('product_colors', JSON.stringify(editedItem.value.product_colors));
-  
-  // Append image only if a new one is selected
   if (selectedFile.value) {
     formData.append('image', selectedFile.value);
   }
 
   try {
     if (editedIndex.value > -1) {
-      // --- UPDATE EXISTING PRODUCT ---
-      formData.append('product_id', editedItem.value.product_id);
-      await axios.post(`${API_BASE_URL}/updateProduct`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      // showSnackbar('Product updated successfully!', 'success');
+      await axios.post(`${API_BASE_URL}/updateProduct`, formData);
     } else {
-      // --- ADD NEW PRODUCT ---
-      await axios.post(`${API_BASE_URL}/addProduct`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      // showSnackbar('Product added successfully!', 'success');
+      await axios.post(`${API_BASE_URL}/addProduct`, formData);
     }
+    await fetchProducts();
     closeDialog();
-    await fetchProducts(); // Refresh the list
   } catch (error) {
     console.error("Error saving product:", error);
-    // showSnackbar('Failed to save product. Please try again.', 'error');
   } finally {
     loadingAction.value = false;
   }
@@ -386,11 +348,9 @@ const saveProduct = async () => {
 const archiveProductConfirm = async () => {
     try {
         await axios.put(`${API_BASE_URL}/archiveProduct/${itemToArchive.value.product_id}`);
-        // showSnackbar('Product archived successfully!', 'success');
         await fetchProducts();
     } catch (error) {
         console.error("Error archiving product:", error);
-        // showSnackbar('Failed to archive product.', 'error');
     } finally {
         closeConfirmArchiveDialog();
     }
@@ -399,26 +359,25 @@ const archiveProductConfirm = async () => {
 const restoreProduct = async (item) => {
     try {
         await axios.put(`${API_BASE_URL}/restoreProduct/${item.product_id}`);
-        // showSnackbar('Product restored successfully!', 'success');
         await fetchProducts();
     } catch (error) {
         console.error("Error restoring product:", error);
-        // showSnackbar('Failed to restore product.', 'error');
     }
 };
-
 
 // --- DIALOG & UI FUNCTIONS ---
 const openAddDialog = () => {
   editedIndex.value = -1;
   editedItem.value = { ...defaultItem };
+  formErrors.value = {}; // Clear errors
   dialog.value = true;
 };
 
 const openEditDialog = (item) => {
   editedIndex.value = products.value.findIndex(p => p.product_id === item.product_id);
-  editedItem.value = JSON.parse(JSON.stringify(item)); // Deep copy
-  imagePreviewUrl.value = `http://localhost:3000/image/${item.product_id}`;
+  editedItem.value = JSON.parse(JSON.stringify(item));
+  imagePreviewUrl.value = `http://localhost:3000/image/${item.product_id}?v=${item.imageVersion}`;
+  formErrors.value = {}; // Clear errors
   dialog.value = true;
 };
 
@@ -438,7 +397,6 @@ const closeConfirmArchiveDialog = () => {
   itemToArchive.value = {};
 };
 
-// --- IMAGE HANDLING ---
 const previewFile = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -456,7 +414,6 @@ const enlargeImage = (imageUrl) => {
   imageDialog.value = true;
 };
 
-// --- COLOR VARIATION FUNCTIONS ---
 const addColor = () => {
     if (!newColor.value.trim() || !editedItem.value.product_colors) return;
     editedItem.value.product_colors.push(newColor.value.trim());
@@ -467,12 +424,10 @@ const removeColor = (index) => {
     editedItem.value.product_colors.splice(index, 1);
 };
 
-// --- LIFECYCLE HOOK ---
 onMounted(() => {
   fetchProducts();
 });
 </script>
-
 <style scoped>
 .v-card {
   border: 1px solid rgba(0, 0, 0, 0.05);

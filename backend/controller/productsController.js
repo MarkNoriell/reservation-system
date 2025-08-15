@@ -1,4 +1,4 @@
-const { addProductModel, fetchProductsModel, updateProductsModel } = require('../models/productsModel.js')
+const { addProductModel, fetchProductsModel, updateProductsModel, archiveProductModel, restoreProductModel } = require('../models/productsModel.js')
 
 exports.addProduct = async (req,res) => {
     try {
@@ -68,5 +68,35 @@ exports.updateProduct = async (req, res) => {
         res.status(500).send({
             message: "Failed to update product. Please check server logs."
         });
+    }
+};
+
+// --- ADD THIS NEW CONTROLLER FUNCTION ---
+exports.archiveProduct = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            return res.status(400).send({ message: "Product ID is required." });
+        }
+        await archiveProductModel(productId);
+        res.status(200).send({ message: "Product archived successfully!" });
+    } catch (error) {
+        console.error("Error archiving product:", error);
+        res.status(500).send({ message: "Failed to archive product." });
+    }
+};
+
+// --- ADD THIS NEW CONTROLLER FUNCTION ---
+exports.restoreProduct = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            return res.status(400).send({ message: "Product ID is required." });
+        }
+        await restoreProductModel(productId);
+        res.status(200).send({ message: "Product restored successfully!" });
+    } catch (error) {
+        console.error("Error restoring product:", error);
+        res.status(500).send({ message: "Failed to restore product." });
     }
 };
