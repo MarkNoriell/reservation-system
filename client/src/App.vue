@@ -4,8 +4,8 @@
 
   const usePersistStore = persistStore()
 
-  const isAccountCredentialsNotEmpty = ({ username, password }) => {
-    return username != '' && password != ''
+  const isAccountCredentialsNotEmpty = ({ username }) => {
+    return username != ''
   }
 
 
