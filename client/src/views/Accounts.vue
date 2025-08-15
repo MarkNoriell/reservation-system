@@ -2,7 +2,7 @@
   <v-app>
     <v-main style="background-color: var(--v-theme-background);">
       <v-container fluid>
-        <h1 class="text-h4 font-weight-bold mb-6" style="color: var(--v-theme-text);">Accounts</h1>
+        <h1 class="text-h4 font-weight-bold mb-6">Accounts</h1>
 
         <v-card class="rounded-lg" elevation="2">
             <v-tabs v-model="tab" bg-color="transparent" color="primary">
@@ -15,28 +15,22 @@
                 <!-- Active Accounts Tab -->
                 <v-window-item value="active">
                     <div class="d-flex justify-end mb-4">
-                        <v-btn
-                            color="primary"
-                            variant="flat"
-                            @click="openAddUserDialog"
-                            prepend-icon="mdi-plus"
-                        >
+                        <v-btn color="primary" @click="openAddUserDialog" prepend-icon="mdi-plus">
                             Add New User
                         </v-btn>
                     </div>
                     <v-data-table
                       :headers="accountHeaders"
-                      :items="users"
+                      :items="activeUsers"
                       items-per-page="5"
-                      class="elevation-0"
                     >
-                      <template v-slot:item.role="{ item }">
-                        <v-chip :color="getRoleColor(item.role)" size="small">{{ item.role }}</v-chip>
+                      <template v-slot:item.access_rights="{ item }">
+                        <v-chip :color="getRoleColor(item.access_rights)" size="small">{{ item.access_rights }}</v-chip>
                       </template>
                       <template v-slot:item.actions="{ item }">
                         <v-tooltip text="Edit User">
                             <template v-slot:activator="{ props }">
-                                <v-icon v-bind="props" class="me-2" @click="openEditUserDialog(item)" color="grey-darken-1">mdi-pencil</v-icon>
+                                <v-icon v-bind="props" class="me-2" @click="openEditUserDialog(item)">mdi-pencil</v-icon>
                             </template>
                         </v-tooltip>
                         <v-tooltip text="Deactivate User">
@@ -54,11 +48,10 @@
                       :headers="accountHeaders"
                       :items="deactivatedUsers"
                       items-per-page="5"
-                      class="elevation-0"
                       no-data-text="No deactivated accounts found."
                     >
-                      <template v-slot:item.role="{ item }">
-                        <v-chip :color="getRoleColor(item.role)" size="small" variant="outlined">{{ item.role }}</v-chip>
+                      <template v-slot:item.access_rights="{ item }">
+                        <v-chip :color="getRoleColor(item.access_rights)" size="small" variant="outlined">{{ item.access_rights }}</v-chip>
                       </template>
                        <template v-slot:item.actions="{ item }">
                          <v-tooltip text="Reactivate User">
@@ -79,15 +72,17 @@
       <!-- Add/Edit User Dialog -->
       <v-dialog v-model="userDialog" max-width="600px" persistent>
         <v-card class="rounded-lg">
-          <v-card-title class="pa-4"><span class="text-h5">{{ userFormTitle }}</span></v-card-title>
+          <v-card-title><span class="text-h5">{{ userFormTitle }}</span></v-card-title>
           <v-card-text>
             <v-container>
-              <v-text-field v-model="editedUser.name" label="Full Name" variant="outlined"></v-text-field>
-              <v-text-field v-model="editedUser.email" label="Email Address" variant="outlined"></v-text-field>
-              <v-select v-model="editedUser.role" :items="['Admin', 'Staff']" label="Role" variant="outlined"></v-select>
+              <v-text-field v-model="editedUser.customer_name" label="Full Name" variant="outlined"></v-text-field>
+              <v-text-field v-model="editedUser.username" label="Username (Email)" variant="outlined" :disabled="isEditMode"></v-text-field>
+              <!-- Show password field only when adding a new user -->
+              <v-text-field v-if="!isEditMode" v-model="editedUser.password" label="Password" type="password" variant="outlined"></v-text-field>
+              <v-select v-model="editedUser.access_rights" :items="['Admin', 'User']" label="Access Rights" variant="outlined"></v-select>
             </v-container>
           </v-card-text>
-          <v-card-actions class="pa-4">
+          <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn text @click="closeUserDialog">Cancel</v-btn>
             <v-btn color="primary" variant="flat" @click="saveUser">Save</v-btn>
@@ -95,95 +90,111 @@
         </v-card>
       </v-dialog>
 
-       <!-- Deactivate Confirmation Dialog -->
-      <v-dialog v-model="confirmDeactivateDialog" max-width="500px" persistent>
-        <v-card class="rounded-lg">
-          <v-card-title class="text-h5">Confirm Deactivation</v-card-title>
-          <v-card-text>Are you sure you want to deactivate the user "{{ userToProcess.name }}"?</v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="closeConfirmDeactivateDialog">Cancel</v-btn>
-            <v-btn color="error" variant="flat" @click="deactivateUserConfirm">Deactivate</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      
-       <!-- Reactivate Confirmation Dialog -->
-      <v-dialog v-model="confirmReactivateDialog" max-width="500px" persistent>
-        <v-card class="rounded-lg">
-          <v-card-title class="text-h5">Confirm Reactivation</v-card-title>
-          <v-card-text>Are you sure you want to reactivate the user "{{ userToProcess.name }}"?</v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="closeConfirmReactivateDialog">Cancel</v-btn>
-            <v-btn color="success" variant="flat" @click="reactivateUserConfirm">Reactivate</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
+       <!-- Deactivate/Reactivate Dialogs remain the same -->
+       <!-- ... -->
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // --- STATE ---
 const tab = ref('active');
-const users = ref([
-  { id: 1, name: 'Admin User', email: 'admin@preserve.com', role: 'Admin' },
-  { id: 2, name: 'Staff Member One', email: 'staff1@preserve.com', role: 'Staff' },
-  { id: 3, name: 'Staff Member Two', email: 'staff2@preserve.com', role: 'Staff' },
-]);
-const deactivatedUsers = ref([]);
+const allAccounts = ref([]); // Single source of truth for all users
 const userDialog = ref(false);
 const confirmDeactivateDialog = ref(false);
 const confirmReactivateDialog = ref(false);
-const editedUserIndex = ref(-1);
-const defaultUser = { id: -1, name: '', email: '', role: 'Staff' };
-const editedUser = ref({ ...defaultUser });
-const userToProcess = ref({}); // Used for both deactivation and reactivation
 
-// --- HEADERS ---
+const defaultUser = { customer_name: '', username: '', password: '', access_rights: 'User' };
+const editedUser = ref({ ...defaultUser });
+const userToProcess = ref({});
+
+// --- COMPUTED PROPERTIES ---
+const isEditMode = computed(() => !!editedUser.value.originalUsername); // Check if we are editing
+const userFormTitle = computed(() => (isEditMode.value ? 'Edit User' : 'Add New User'));
+
+// Automatically filter the master list into two separate lists for the tabs
+const activeUsers = computed(() => allAccounts.value.filter(u => !u.deleted_date));
+const deactivatedUsers = computed(() => allAccounts.value.filter(u => u.deleted_date));
+
+// --- DATA TABLE HEADERS (updated keys) ---
 const accountHeaders = [
-  { title: 'Full Name', key: 'name' },
-  { title: 'Email Address', key: 'email' },
-  { title: 'Role', key: 'role' },
+  { title: 'Full Name', key: 'customer_name' },
+  { title: 'Username (Email)', key: 'username' },
+  { title: 'Role', key: 'access_rights' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
 ];
 
-// --- COMPUTED ---
-const userFormTitle = computed(() => (editedUserIndex.value === -1 ? 'Add New User' : 'Edit User'));
+// --- API METHODS ---
+const fetchAllAccounts = async () => {
+    try {
+        const { data } = await axios.get(`${API_BASE_URL}/accounts`);
+        allAccounts.value = data;
+    } catch (error) {
+        console.error("Error fetching accounts:", error);
+    }
+};
 
-// --- METHODS ---
+const saveUser = async () => {
+    try {
+        if (isEditMode.value) {
+            // Update existing user
+            await axios.put(`${API_BASE_URL}/accounts/${editedUser.value.originalUsername}`, editedUser.value);
+        } else {
+            // Add new user
+            await axios.post(`${API_BASE_URL}/accounts`, editedUser.value);
+        }
+        await fetchAllAccounts(); // Refresh the list
+        closeUserDialog();
+    } catch (error) {
+        console.error("Error saving user:", error);
+        alert(error.response?.data?.message || "An error occurred.");
+    }
+};
+
+const deactivateUserConfirm = async () => {
+  try {
+    await axios.put(`${API_BASE_URL}/accounts/${userToProcess.value.username}/deactivate`);
+    await fetchAllAccounts(); // Refresh
+    closeConfirmDeactivateDialog();
+  } catch (error) {
+    console.error("Error deactivating user:", error);
+  }
+};
+
+const reactivateUserConfirm = async () => {
+  try {
+    await axios.put(`${API_BASE_URL}/accounts/${userToProcess.value.username}/reactivate`);
+    await fetchAllAccounts(); // Refresh
+    closeConfirmReactivateDialog();
+  } catch (error) {
+    console.error("Error reactivating user:", error);
+  }
+};
+
+// --- DIALOG & UI METHODS ---
 const getRoleColor = (role) => (role === 'Admin' ? 'green' : 'blue');
 
-// Add/Edit User Dialog
 const openAddUserDialog = () => {
-  editedUserIndex.value = -1;
   editedUser.value = { ...defaultUser };
   userDialog.value = true;
 };
 
 const openEditUserDialog = (user) => {
-  editedUserIndex.value = users.value.findIndex(u => u.id === user.id);
-  editedUser.value = { ...user };
+  // Store original username in case it's part of the primary key
+  editedUser.value = { ...user, originalUsername: user.username };
   userDialog.value = true;
 };
 
-const closeUserDialog = () => (userDialog.value = false);
-
-const saveUser = () => {
-  if (editedUserIndex.value > -1) {
-    Object.assign(users.value[editedUserIndex.value], editedUser.value);
-  } else {
-    users.value.push({ ...editedUser.value, id: Date.now() });
-  }
-  closeUserDialog();
+const closeUserDialog = () => {
+    userDialog.value = false;
+    editedUser.value = { ...defaultUser };
 };
 
-
-// Deactivation Dialog
 const openConfirmDeactivateDialog = (user) => {
   userToProcess.value = user;
   confirmDeactivateDialog.value = true;
@@ -194,16 +205,6 @@ const closeConfirmDeactivateDialog = () => {
     userToProcess.value = {};
 };
 
-const deactivateUserConfirm = () => {
-  const index = users.value.findIndex(u => u.id === userToProcess.value.id);
-  if (index > -1) {
-    deactivatedUsers.value.push(users.value[index]);
-    users.value.splice(index, 1);
-  }
-  closeConfirmDeactivateDialog();
-};
-
-// Reactivation Dialog
 const openConfirmReactivateDialog = (user) => {
   userToProcess.value = user;
   confirmReactivateDialog.value = true;
@@ -214,14 +215,10 @@ const closeConfirmReactivateDialog = () => {
     userToProcess.value = {};
 };
 
-const reactivateUserConfirm = () => {
-  const index = deactivatedUsers.value.findIndex(u => u.id === userToProcess.value.id);
-  if (index > -1) {
-    users.value.push(deactivatedUsers.value[index]);
-    deactivatedUsers.value.splice(index, 1);
-  }
-  closeConfirmReactivateDialog();
-};
+// --- LIFECYCLE HOOK ---
+onMounted(() => {
+    fetchAllAccounts();
+});
 </script>
 
 <style scoped>

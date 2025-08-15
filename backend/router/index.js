@@ -4,7 +4,6 @@ const router = express.Router()
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-const { fetchAccounts, loginAccount } = require('../controller/accountController.js')
 const { addProduct, fetchProducts, updateProduct, archiveProduct, restoreProduct } = require('../controller/productsController.js')
 
 // --- ADD a new import for the reservations controller ---
@@ -20,8 +19,15 @@ const { getSalesMetrics, getMonthlyRevenue, getTopSellingItems } = require('../c
 
 const { getDashboardData } = require('../controller/dashboardController.js');
 
-router.get("/fetchAccounts", fetchAccounts)
-router.post("/loginAccount", loginAccount)
+// --- ADD these imports from your account controller ---
+const { 
+    getAllAccounts,
+    addAccount,
+    updateAccount,
+    deactivateAccount,
+    reactivateAccount
+} = require('../controller/accountController.js'); // Verify this path
+
 router.post("/addProduct", upload.single('image'), addProduct)
 router.get("/fetchProducts", fetchProducts)
 router.post("/updateProduct",upload.single('image'), updateProduct)
@@ -44,5 +50,13 @@ router.get("/sales/monthly-revenue", getMonthlyRevenue);
 router.get("/sales/top-selling", getTopSellingItems);
 
 router.get("/dashboard", getDashboardData);
+
+// --- ADD THESE NEW ACCOUNT MANAGEMENT ROUTES ---
+router.get("/accounts", getAllAccounts);
+router.post("/accounts", addAccount);
+router.put("/accounts/:username", updateAccount); // Use username as the unique ID
+router.put("/accounts/:username/deactivate", deactivateAccount);
+router.put("/accounts/:username/reactivate", reactivateAccount);
+
 
 module.exports = router
