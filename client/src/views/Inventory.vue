@@ -59,6 +59,10 @@
                     </v-avatar>
                   </template>
 
+                  <template v-slot:item.product_cost="{ item }">
+                    <span>₱{{ item.product_cost.toFixed(2) }}</span>
+                  </template>
+
                   <template v-slot:item.product_price="{ item }">
                     <span>₱{{ item.product_price.toFixed(2) }}</span>
                   </template>
@@ -104,12 +108,13 @@
                       <v-text-field v-model="editedItem.product_name" label="Product Name" variant="outlined"></v-text-field>
                       <v-row>
                           <v-col cols="12" sm="6">
-                              <v-text-field v-model.number="editedItem.product_price" label="Price (₱)" type="number" variant="outlined"></v-text-field>
+                              <v-text-field v-model.number="editedItem.product_cost" label="Product Cost (₱)" type="number" variant="outlined"></v-text-field>
                           </v-col>
                           <v-col cols="12" sm="6">
-                              <v-select v-model="editedItem.product_category" :items="categories" label="Category" variant="outlined"></v-select>
+                              <v-text-field v-model.number="editedItem.product_price" label="Price (₱)" type="number" variant="outlined"></v-text-field>
                           </v-col>
                       </v-row>
+                      <v-select v-model="editedItem.product_category" :items="categories" label="Category" variant="outlined"></v-select>
                         <v-file-input
                           label="Select Image"
                           accept="image/*"
@@ -222,6 +227,7 @@ const headers = [
   { title: 'Image', key: 'product_image', sortable: false },
   { title: 'Product Name', key: 'product_name' },
   { title: 'Category', key: 'product_category' },
+  { title: 'Product Cost', key: 'product_cost' },
   { title: 'Price', key: 'product_price' },
   { title: 'Available Colors', key: 'product_colors', sortable: false, width: '25%' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
@@ -229,6 +235,7 @@ const headers = [
 
 const defaultItem = {
   product_name: '',
+  product_cost: 0,
   product_price: 0,
   product_category: null,
   product_colors: [],

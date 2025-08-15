@@ -7,6 +7,7 @@ exports.addProductModel = (productDetails) => {
     const { 
         product_category, 
         product_name,  
+        product_cost,
         product_price,
         product_colors,
         product_image,
@@ -27,18 +28,20 @@ exports.addProductModel = (productDetails) => {
             const query = `
             INSERT INTO products (
                 product_category, 
-                product_name,  
+                product_name,
+                product_cost,  
                 product_price,
                 product_colors,
                 product_image,
                 img_mime,
                 archived
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
             const values = [
             product_category,
             product_name,
+            product_cost,
             product_price,
             product_colors,
             product_image, // binary buffer
@@ -88,7 +91,8 @@ exports.updateProductsModel = (updatedProductDetails) => {
     const { 
         product_id,
         product_category, 
-        product_name,  
+        product_name,
+        product_cost,  
         product_price,
         product_colors,
         product_image,
@@ -96,19 +100,20 @@ exports.updateProductsModel = (updatedProductDetails) => {
         archived
     } = updatedProductDetails
 
+    console.log(updatedProductDetails,"updatedProductDetails");
+    
+
     const values = [
         product_category,
         product_name,
+        product_cost,
         product_price,
         product_colors,
-        product_image, // binary buffer
+        product_image,
         img_mime,
         archived,
         product_id
     ];
-
-            console.log(product_id,"product_id edit");
-
 
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
@@ -120,6 +125,7 @@ exports.updateProductsModel = (updatedProductDetails) => {
             const query = `UPDATE products
                 SET product_category = ?,
                 product_name = ?,
+                product_cost = ?,
                 product_price = ?,
                 product_colors = ?,
                 product_image = ?,
