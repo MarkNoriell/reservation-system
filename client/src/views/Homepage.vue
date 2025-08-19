@@ -14,7 +14,7 @@
             <p class="text-h6 font-weight-regular mb-8" style="color: #6D4C41;">
               Discover unique, handcrafted crochet creations from Iluvmica. Reserve your next favorite piece today.
             </p>
-            <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;">
+            <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;" @click="redirectToShop()">
               Shop Now
             </v-btn>
           </v-col>
@@ -196,7 +196,9 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
+const router = useRouter()
 
 const API_BASE_URL = 'http://localhost:3000/api';
 const DAILY_RESERVATION_LIMIT = 10;
@@ -256,6 +258,10 @@ const fetchDateCounts = async () => {
     } catch (error) {
         console.error("Error fetching date counts:", error);
     }
+}
+
+const redirectToShop = () => {
+  router.push('/shop')
 }
 
 // --- DIALOG & FORM FUNCTIONS ---

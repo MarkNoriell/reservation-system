@@ -165,8 +165,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { persistStore } from '@/stores/persistStore';
 import axios from 'axios';
+const usePersistStore = persistStore()
 
 // --- CONFIGURATION ---
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -311,6 +313,13 @@ const selectDate = (date) => {
     newReservation.value.pickup_date = date.toLocaleDateString('en-CA');
     isDateMenuVisible.value = false;
 };
+
+watch(() => isDialogVisible.value,(dialogIsVisible) => {
+  if(dialogIsVisible){
+    newReservation.value.customer_name = usePersistStore.accountCredentials.username
+  }
+  
+})
 
 // --- LIFECYCLE HOOK ---
 onMounted(() => {
