@@ -8,6 +8,7 @@ import Sales from '../views/Sales.vue'
 import Accounts from '../views/Accounts.vue'
 import AboutUs from '../views/AboutUs.vue'
 import Shop from '../views/Shop.vue'
+import MyReservations from '../views/MyReservations.vue'
 import Test from '../views/Test.vue'
 import { persistStore } from '../stores/persistStore';
 
@@ -64,6 +65,11 @@ const router = createRouter({
       path: '/aboutus',
       name: 'aboutus',
       component: AboutUs,
+    },
+    {
+      path: '/myreservations',
+      name: 'myreservations',
+      component: MyReservations,
     },
     {
       path: '/testpath',
