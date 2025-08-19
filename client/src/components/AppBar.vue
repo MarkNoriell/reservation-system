@@ -63,6 +63,11 @@ const navItems = ref([
         path:'/accounts'
     },
     {
+        title: 'Shop',
+        icon: 'mdi-shopping',
+        path:'/shop'
+    },
+    {
         title: 'About Us',
         icon: 'mdi-information',
         path:'/aboutus'
@@ -74,7 +79,7 @@ const navItems = ref([
     }
 ])
 
-const userNavItems = ['Home','Logout','About Us']
+const userNavItems = ['Home','Logout','About Us','Shop']
 
 const filterNavItems = (navItems,accessRights) => {
   console.log(accessRights,"accessRights");

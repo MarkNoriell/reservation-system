@@ -7,6 +7,7 @@ import Inventory from '../views/Inventory.vue'
 import Sales from '../views/Sales.vue'
 import Accounts from '../views/Accounts.vue'
 import AboutUs from '../views/AboutUs.vue'
+import Shop from '../views/Shop.vue'
 import Test from '../views/Test.vue'
 import { persistStore } from '../stores/persistStore';
 
@@ -53,6 +54,11 @@ const router = createRouter({
       name: 'accounts',
       component: Accounts,
       meta: { requiresAuth: true } // This route is protected
+    },
+    {
+      path: '/shop',
+      name: 'Shop',
+      component: Shop,
     },
     {
       path: '/aboutus',
