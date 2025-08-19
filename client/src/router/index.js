@@ -84,8 +84,6 @@ const router = createRouter({
 // In your router file (e.g., /router/index.js)
 
 router.beforeEach((to, from, next) => {
-  console.log(`Navigating to: ${to.path}`);
-
   const usePersistStore = persistStore();
   const username = usePersistStore.accountCredentials.username;
 

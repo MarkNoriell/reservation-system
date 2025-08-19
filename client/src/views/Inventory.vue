@@ -321,6 +321,9 @@ const saveProduct = async () => {
   // Create a clean payload object by destructuring `editedItem`.
   // This explicitly removes the old image data and the client-side imageVersion
   // before we prepare the data to be sent.
+  if(editedItem.value.product_colors.length <= 0 ){
+    editedItem.value.product_colors.push('Standard Color')
+  }
   const { 
     product_image, 
     img_mime, 
