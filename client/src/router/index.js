@@ -77,12 +77,7 @@ router.beforeEach((to, from, next) => {
   const usePersistStore = persistStore();
   const username = usePersistStore.accountCredentials.username;
 
-  // Log the values we are checking
-  console.log('Route requires auth?:', to.meta.requiresAuth);
-  console.log('Username from Pinia store:', `"${username}"`); // Quotes help see if it's truly empty
-
   const isAuthenticated = username !== '' && username !== null && username !== undefined;
-  console.log('Is user authenticated?:', isAuthenticated);
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     console.log('Redirecting to login page...');

@@ -2,38 +2,36 @@
   <v-app style="background-color: #FFF8F5;">
     <v-main>
       <v-container class="py-12">
+        <!-- --- HERO SECTION --- -->
         <v-row align="center" justify="center" class="bg-pink-lighten-5 rounded-xl pa-12">
           <v-col cols="12" md="4">
-            <v-img src="../../public/images/bear crochet.png" alt="Crochet Bear Keychain" contain height="250"></v-img>
+            <v-img src="/images/bear crochet.png" alt="Crochet Bear Keychain" contain height="250"></v-img>
           </v-col>
           <v-col cols="12" md="6">
-          <!-- THIS IS THE NEW HEADLINE -->
-          <h1 class="text-h4 text-md-h3 font-weight-bold mb-4" style="color: #5D4037; line-height: 1.4;">
-          Handcrafted with Heart, Reserved for You.
-          </h1>
-
-          <!-- THIS IS THE NEW SUB-HEADLINE -->
-          <p class="text-h6 font-weight-regular mb-8" style="color: #6D4C41;">
-          Discover unique, handcrafted crochet creations from Iluvmica. Reserve your next favorite piece today.
-          </p>
-
-          <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;">
-          Shop Now
-          </v-btn>
+            <h1 class="text-h4 text-md-h3 font-weight-bold mb-4" style="color: #5D4037; line-height: 1.4;">
+              Handcrafted with Heart, Reserved for You.
+            </h1>
+            <p class="text-h6 font-weight-regular mb-8" style="color: #6D4C41;">
+              Discover unique, handcrafted crochet creations from Iluvmica. Reserve your next favorite piece today.
+            </p>
+            <v-btn outlined large color="#D8A798" class="text-capitalize" style="border-width: 2px;">
+              Shop Now
+            </v-btn>
           </v-col>
         </v-row>
 
-         <div class="mt-16">
-          <h2 class="text-h4 font-weight-bold mb-8" style="color: #5D4037;">Shop</h2>
-          <v-row>
-            <v-col
-              v-for="product in products"
+        <!-- --- KEY CHANGE: Replaced v-carousel with v-slide-group --- -->
+        <div class="mt-16">
+          <h2 class="text-h4 font-weight-bold mb-8 text-center" style="color: #5D4037;">Featured Items</h2>
+          <v-slide-group show-arrows>
+            <!-- KEY CHANGE: Looping over 'featuredProducts' now -->
+            <v-slide-group-item
+              v-for="product in featuredProducts" 
               :key="product.product_id"
-              cols="12" sm="6" md="3"
             >
-              <v-card class="text-center" flat style="background-color: transparent;">
+              <!-- Added margin for spacing between items -->
+              <v-card class="text-center mx-4" flat style="background-color: transparent;" width="250">
                 <v-card class="d-inline-block pa-2" flat rounded="lg">
-                    <!-- Use dynamic image URL -->
                     <v-img 
                       :src="`http://localhost:3000/image/${product.product_id}`" 
                       :alt="product.product_name" 
@@ -45,19 +43,88 @@
                 <v-card-text>
                   <div class="text-h6 font-weight-medium" style="color: #5D4037;">{{ product.product_name }}</div>
                   <div class="font-weight-regular my-1" style="color: #5D4037;">₱ {{ product.product_price.toFixed(2) }}</div>
-                  <!-- Bind the click event to the Reserve button -->
                   <v-btn outlined rounded color="#D8A798" class="mt-4 text-capitalize" style="border-width: 2px;" @click="openReservationDialog(product)">
                     Reserve
                   </v-btn>
                 </v-card-text>
               </v-card>
-            </v-col>
-          </v-row>
+            </v-slide-group-item>
+          </v-slide-group>
         </div>
+        
+        <!-- --- CONTACT US SECTION --- -->
+<div class="mt-16">
+    <v-row justify="center">
+        <v-col cols="12">
+            <div class="bg-pink-lighten-5 rounded-xl pa-8 pa-md-12">
+                <v-row align="center">
+                    <!-- Left Column: Contact Info & Socials -->
+                    <v-col cols="12" md="6">
+                        <h2 class="text-h4 font-weight-bold mb-4" style="color: #5D4037;">Get in Touch</h2>
+                        <p class="mb-8" style="color: #6D4C41;">
+                            We'd love to hear from you! Whether you have a question about our products, a custom order request, or just want to say hello, feel free to reach out.
+                        </p>
+
+                        <v-list lines="two" bg-color="transparent" class="mb-6">
+                            <!-- Call Us Item -->
+                            <v-list-item>
+                                <template v-slot:prepend>
+                                    <v-icon color="#5D4037">mdi-phone</v-icon>
+                                </template>
+                                <v-list-item-title class="font-weight-bold" style="color: #5D4037;">Call Us</v-list-item-title>
+                                <v-list-item-subtitle>
+                                    <a href="tel:+639123456789" class="contact-link">+639945748346</a>
+                                </v-list-item-subtitle>
+                            </v-list-item>
+
+                            <!-- KEY CHANGE: Replaced Email item with Facebook item -->
+                            <v-list-item>
+                                <template v-slot:prepend>
+                                    <v-icon color="#5D4037">mdi-facebook</v-icon>
+                                </template>
+                                <v-list-item-title class="font-weight-bold" style="color: #5D4037;">Follow on Facebook</v-list-item-title>
+                                <v-list-item-subtitle>
+                                    <a href="https://www.facebook.com/your-page-url" target="_blank" class="contact-link">lluvmicacrochet</a>
+                                </v-list-item-subtitle>
+                            </v-list-item>
+
+                            <!-- Our Location Item -->
+                            <v-list-item>
+                                <template v-slot:prepend>
+                                    <v-icon color="#5D4037">mdi-map-marker</v-icon>
+                                </template>
+                                <v-list-item-title class="font-weight-bold" style="color: #5D4037;">Our Location</v-list-item-title>
+                                <v-list-item-subtitle style="color: #6D4C41;">421 Garcia st. Cavite, City</v-list-item-subtitle>
+                            </v-list-item>
+                        </v-list>
+                        
+                        <!-- KEY CHANGE: The standalone Facebook button has been removed -->
+
+                    </v-col>
+
+                    <!-- KEY CHANGE: Right Column now contains a placeholder for a logo instead of the map -->
+                    <v-col cols="12" md="6" class="d-flex align-center justify-center mt-8 mt-md-0">
+                        <!-- 
+                            TODO: Replace the 'src' with the actual path to your logo.
+                            The max-width is set to 300px, but you can adjust it as needed.
+                        -->
+                        <v-img
+                            src="../../public/images/Logo2.png"
+                            alt="Your Company Logo"
+                            contain
+                            style="max-width: 500px; width: 100%;"
+                        ></v-img>
+                    </v-col>
+                </v-row>
+            </div>
+        </v-col>
+    </v-row>
+</div>
+
       </v-container>
     </v-main>
 
-    <!-- --- NEW: Reservation Dialog --- -->
+    <!-- --- RESERVATION DIALOG (No changes needed here) --- -->
     <v-dialog v-model="isDialogVisible" max-width="500px" persistent>
       <v-card class="rounded-lg" v-if="selectedProduct">
         <v-card-title>
@@ -128,10 +195,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
-// You might need to import your Pinia store if the user's name is stored there
-// import { persistStore } from '@/stores/persistStore';
 
 const API_BASE_URL = 'http://localhost:3000/api';
 const DAILY_RESERVATION_LIMIT = 10;
@@ -147,12 +212,18 @@ const isSaving = ref(false);
 const reservationForm = ref(null);
 
 // Form State
-const selectedProduct = ref(null); // Holds the product being reserved
+const selectedProduct = ref(null);
 const newReservation = ref({});
 const newDateObject = ref(null);
 
 // Snackbar State
 const snackbar = ref({ show: false, text: '', color: 'success' });
+
+// --- COMPUTED PROPERTY for the carousel ---
+const featuredProducts = computed(() => {
+  // Returns the first 4 products from the list
+  return products.value.slice(0, 4);
+});
 
 // --- VALIDATION ---
 const validationRules = {
@@ -166,7 +237,6 @@ const validationRules = {
 // --- API FUNCTIONS ---
 const fetchProducts = async () => {
   try {
-    // We only fetch non-archived products for the shop
     const response = await axios.get(`${API_BASE_URL}/fetchProducts`);
     products.value = response.data
       .filter(p => !p.archived || p.archived === 'false')
@@ -192,7 +262,7 @@ const fetchDateCounts = async () => {
 const openReservationDialog = (product) => {
   selectedProduct.value = product;
   newReservation.value = {
-    customer_name: '', // Or pre-fill from Pinia store: usePersistStore().user.customer_name
+    customer_name: '',
     product_id: product.product_id,
     product_color: null,
     quantity: 1,
@@ -214,11 +284,9 @@ const saveReservation = async () => {
 
   isSaving.value = true;
   try {
-      await axios.post(`${API_BASE_URL}/reservations`, newReservation.value);
+      await axios.post(`${API__BASE_URL}/reservations`, newReservation.value);
       closeReservationDialog();
-      // Refresh date counts for the next reservation
       await fetchDateCounts();
-      // Show success message
       snackbar.value = { show: true, text: 'Reservation placed successfully!', color: 'success' };
   } catch (error) {
       console.error("Error saving reservation:", error);
@@ -254,5 +322,42 @@ onMounted(() => {
 <style scoped>
 .bg-pink-lighten-5 {
   background-color: #FFF1EE !important;
+}
+.contact-details span {
+    font-size: 1rem;
+}
+
+/* ... keep your existing styles ... */
+.bg-pink-lighten-5 {
+  background-color: #FFF1EE !important;
+}
+
+/* --- STYLES FOR IMPROVED CONTACT SECTION --- */
+.contact-link {
+  color: #6D4C41;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.contact-link:hover {
+  color: #5D4037;
+  text-decoration: underline;
+}
+
+.map-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio (Square) */
+  border-radius: 16px; 
+}
+
+.map-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
 }
 </style>
