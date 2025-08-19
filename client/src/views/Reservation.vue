@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-main style="background-color: var(--v-theme-background);">
+    <v-main style="background-color: #feefea;">
       <v-container fluid>
         <h1 class="text-h4 font-weight-bold mb-6" style="color: var(--v-theme-text);">Reservations</h1>
 

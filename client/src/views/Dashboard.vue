@@ -39,7 +39,7 @@
               <p class="text-h6 font-weight-bold mb-1">
                 {{ topSeller.product_name }}
               </p>
-              <v-chip color="primary" size="small">{{ topSeller.totalSold }} units sold</v-chip>
+              <v-chip color="black" size="small">{{ topSeller.totalSold }} units sold</v-chip>
           </v-card-text>
         </v-card>
       </v-col>

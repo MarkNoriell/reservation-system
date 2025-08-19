@@ -33,6 +33,11 @@ const usePersistStore = persistStore()
 const drawer = ref(false)
 const navItems = ref([
     {
+        title: 'Home',
+        icon: 'mdi-home',
+        path:'/'
+    },
+    {
         title: 'Dashboard',
         icon: 'mdi-monitor-dashboard',
         path:'/dashboard'
@@ -58,18 +63,25 @@ const navItems = ref([
         path:'/accounts'
     },
     {
+        title: 'About Us',
+        icon: 'mdi-information',
+        path:'/aboutus'
+    },
+    {
       title: 'Logout',
       icon: 'mdi-logout',
       path: 'logout'
     }
 ])
 
+const userNavItems = ['Home','Logout','About Us']
+
 const filterNavItems = (navItems,accessRights) => {
   console.log(accessRights,"accessRights");
   
   return navItems.filter((items) => {
     if(accessRights == 'User'){
-      return items.title == 'Logout'
+      return userNavItems.includes(items.title)
     }
     else{
       return items
