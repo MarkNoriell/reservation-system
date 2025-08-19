@@ -115,6 +115,7 @@
                       label="Product Name" 
                       variant="outlined"
                       :error-messages="formErrors.product_name"
+                      style="margin-bottom:3%;"
                     ></v-text-field>
                       <v-row>
                         <v-col cols="12" sm="6">
@@ -125,6 +126,7 @@
                             variant="outlined" 
                             prefix="₱"
                             :error-messages="formErrors.product_cost"
+                            style="margin-bottom:4%;"
                           ></v-text-field>
                         </v-col>
                         <v-col cols="12" sm="6">
@@ -135,6 +137,7 @@
                             variant="outlined" 
                             prefix="₱"
                             :error-messages="formErrors.product_price"
+                            style="margin-bottom:4%;"
                           ></v-text-field>
                         </v-col>
                       </v-row>
@@ -303,11 +306,26 @@ const fetchProducts = async () => {
 
 const validateForm = () => {
   formErrors.value = {};
-  const { product_name, product_cost, product_price } = editedItem.value;
+  const { product_name, product_cost, product_price, product_category, product_id } = editedItem.value;
+
+  // --- DUPLICATE PRODUCT CHECK ---
+  const isDuplicate = products.value.some(
+    (product) =>
+      product.product_name.toLowerCase() === product_name.toLowerCase() &&
+      product.product_category.toLowerCase() === product_category.toLowerCase() &&
+      product.product_id !== product_id // Ensure we're not comparing the item to itself when editing
+  );
+
+  if (isDuplicate) {
+    formErrors.value.product_name = 'This product already exists in the selected category.';
+  }
+  // --- END DUPLICATE CHECK ---
+
   if (!product_name) formErrors.value.product_name = 'Product name is required.';
   if (!product_cost || product_cost <= 0) formErrors.value.product_cost = 'Product cost must be greater than zero.';
   if (!product_price || product_price <= 0) formErrors.value.product_price = 'Product price must be greater than zero.';
   if (product_price < product_cost) formErrors.value.product_price = 'Price cannot be lower than the cost.';
+
   return Object.keys(formErrors.value).length === 0;
 };
 
@@ -324,11 +342,11 @@ const saveProduct = async () => {
   if(editedItem.value.product_colors.length <= 0 ){
     editedItem.value.product_colors.push('Standard Color')
   }
-  const { 
-    product_image, 
-    img_mime, 
-    imageVersion, 
-    ...detailsToSubmit 
+  const {
+    product_image,
+    img_mime,
+    imageVersion,
+    ...detailsToSubmit
   } = editedItem.value;
 
   // Now, loop over the CLEAN `detailsToSubmit` object.
