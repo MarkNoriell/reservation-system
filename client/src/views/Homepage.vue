@@ -133,8 +133,9 @@
         <v-card-text>
           <v-form ref="reservationForm">
             <v-text-field
+              disabled
               v-model="newReservation.customer_name"
-              label="Full Name"
+              label="Username"
               variant="outlined"
               density="compact"
               :rules="validationRules.required"
@@ -195,13 +196,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { persistStore } from '@/stores/persistStore';
 import axios from 'axios';
+
 const router = useRouter()
+const usePersistStore = persistStore()
 
 const API_BASE_URL = 'http://localhost:3000/api';
-const DAILY_RESERVATION_LIMIT = 10;
+
+// --- DEFINED CONSTANTS ---
+// A date is considered "fully booked" and triggers a lockout period.
+const DAILY_RESERVATION_LIMIT = 5;
+// An order is considered "large" and requires a clear 4-day window.
+const LARGE_ORDER_THRESHOLD = 1;
 
 // --- STATE ---
 const products = ref([]);
@@ -223,7 +232,6 @@ const snackbar = ref({ show: false, text: '', color: 'success' });
 
 // --- COMPUTED PROPERTY for the carousel ---
 const featuredProducts = computed(() => {
-  // Returns the first 4 products from the list
   return products.value.slice(0, 4);
 });
 
@@ -290,7 +298,7 @@ const saveReservation = async () => {
 
   isSaving.value = true;
   try {
-      await axios.post(`${API__BASE_URL}/reservations`, newReservation.value);
+      await axios.post(`${API_BASE_URL}/reservations`, newReservation.value);
       closeReservationDialog();
       await fetchDateCounts();
       snackbar.value = { show: true, text: 'Reservation placed successfully!', color: 'success' };
@@ -302,21 +310,79 @@ const saveReservation = async () => {
   }
 };
 
-// --- DATE PICKER HELPERS ---
+// --- DATE PICKER HELPERS (REFACTORED LOGIC) ---
 const isDateAllowed = (date) => {
+  const checkingDateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (date < today) return false;
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
 
-  const dateString = date.toLocaleDateString('en-CA');
-  const count = dateCounts.value[dateString] || 0;
-  return count < DAILY_RESERVATION_LIMIT;
+  // Universal Rule: Always disable past dates.
+  if (checkingDateUTC < todayUTC) {
+    return false;
+  }
+
+  // Determine if the user is currently trying to place a large or small order.
+  const isPlacingLargeOrder = (newReservation.value.quantity || 0) > LARGE_ORDER_THRESHOLD;
+
+  // Iterate through all the existing reservation data to find fully booked days and define their lockout periods.
+  for (const dateString in dateCounts.value) {
+    const count = dateCounts.value[dateString];
+
+    // This checks if a day is "fully booked" and should start a lockout.
+    if (count >= DAILY_RESERVATION_LIMIT) {
+      // Condition 1: Define the 4-day "lockout period" (the booked day + 3 following days).
+      const lockoutStartDateUTC = new Date(dateString);
+      const lockoutEndDateUTC = new Date(lockoutStartDateUTC);
+      lockoutEndDateUTC.setUTCDate(lockoutStartDateUTC.getUTCDate() + 3);
+
+      if (isPlacingLargeOrder) {
+        // Condition 2: Logic for LARGE orders (quantity > 2).
+        // A large order also requires a 4-day window. We must check if this prospective window
+        // overlaps AT ALL with the existing lockout period.
+        const prospectiveStartDateUTC = checkingDateUTC;
+        const prospectiveEndDateUTC = new Date(prospectiveStartDateUTC);
+        prospectiveEndDateUTC.setUTCDate(prospectiveStartDateUTC.getUTCDate() + 3);
+
+        // The date is DISALLOWED if the prospective window for the new large order
+        // overlaps with an existing lockout period.
+        if (prospectiveStartDateUTC <= lockoutEndDateUTC && prospectiveEndDateUTC >= lockoutStartDateUTC) {
+          return false; // Conflict found. This disables dates before the lockout for large orders.
+        }
+      } else {
+        // Condition 3: Logic for SMALL orders (quantity <= 2).
+        // A small order is much simpler. It is only disallowed if the specific date
+        // selected falls directly inside an existing lockout period.
+        if (checkingDateUTC >= lockoutStartDateUTC && checkingDateUTC <= lockoutEndDateUTC) {
+          return false; // This specific day is blocked.
+        }
+      }
+    }
+  }
+
+  // If the date passes all checks for its order size, it is allowed.
+  return true;
 };
+
 
 const selectDate = (date) => {
     newReservation.value.pickup_date = date.toLocaleDateString('en-CA');
     isDateMenuVisible.value = false;
 };
+
+// Watch for changes in quantity to reset the date and prevent bugs.
+watch(() => newReservation.value.quantity, (newQuantity, oldQuantity) => {
+  if (isDialogVisible.value && oldQuantity !== undefined) {
+    newReservation.value.pickup_date = null;
+    newDateObject.value = null;
+  }
+});
+
+// Watch for dialog visibility to set the customer name.
+watch(() => isDialogVisible.value,(dialogIsVisible) => {
+  if(dialogIsVisible){
+    newReservation.value.customer_name = usePersistStore.accountCredentials.username
+  }
+})
 
 // --- LIFECYCLE HOOK ---
 onMounted(() => {

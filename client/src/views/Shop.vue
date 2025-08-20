@@ -145,7 +145,6 @@
                   v-model="newDateObject"
                   :allowed-dates="isDateAllowed"
                   @update:model-value="selectDate"
-                  color="primary"
               ></v-date-picker>
             </v-menu>
           </v-form>
@@ -174,6 +173,7 @@ const usePersistStore = persistStore()
 // --- CONFIGURATION ---
 const API_BASE_URL = 'http://localhost:3000/api';
 const DAILY_RESERVATION_LIMIT = 5;
+const LARGE_ORDER_THRESHOLD = 1;
 
 // --- STATE MANAGEMENT ---
 const products = ref([]);
@@ -310,46 +310,70 @@ const saveReservation = async () => {
  *    that has reached its DAILY_RESERVATION_LIMIT.
  */
 const isDateAllowed = (date) => {
-  // The 'date' argument from v-date-picker is a local Date object. We convert it
-  // to a UTC-based date at midnight for consistent, timezone-agnostic comparison.
   const checkingDateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-
-  // Rule 1: Disable all dates in the past.
   const today = new Date();
   const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+  // Universal Rule: Always disable past dates.
   if (checkingDateUTC < todayUTC) {
     return false;
   }
 
-  // Rule 2: Check for 4-day "lockout" periods.
-  for (const dateString in dateCounts.value) { // dateString is 'YYYY-MM-DD'
+  // Determine if the user is currently trying to place a large or small order.
+  const isPlacingLargeOrder = (newReservation.value.quantity || 0) > LARGE_ORDER_THRESHOLD;
+
+  // Iterate through all the existing reservation data to find fully booked days and define their lockout periods.
+  for (const dateString in dateCounts.value) {
     const count = dateCounts.value[dateString];
 
+    // This checks if a day is "fully booked" and should start a lockout.
     if (count >= DAILY_RESERVATION_LIMIT) {
-      // Create the start of the lockout period. new Date('YYYY-MM-DD')
-      // correctly parses this as UTC midnight.
+      // Condition 1: Define the 4-day "lockout period" (the booked day + 3 following days).
       const lockoutStartDateUTC = new Date(dateString);
-      
-      // Calculate the end of the lockout period (3 days after the start).
       const lockoutEndDateUTC = new Date(lockoutStartDateUTC);
       lockoutEndDateUTC.setUTCDate(lockoutStartDateUTC.getUTCDate() + 3);
 
-      // If the date being checked falls within this UTC range, disable it.
-      if (checkingDateUTC >= lockoutStartDateUTC && checkingDateUTC <= lockoutEndDateUTC) {
-        return false;
+      if (isPlacingLargeOrder) {
+        // Condition 2: Logic for LARGE orders (quantity > 2).
+        // A large order also requires a 4-day window. We must check if this prospective window
+        // overlaps AT ALL with the existing lockout period.
+        const prospectiveStartDateUTC = checkingDateUTC;
+        const prospectiveEndDateUTC = new Date(prospectiveStartDateUTC);
+        prospectiveEndDateUTC.setUTCDate(prospectiveStartDateUTC.getUTCDate() + 3);
+
+        // The date is DISALLOWED if the prospective window for the new large order
+        // overlaps with an existing lockout period.
+        if (prospectiveStartDateUTC <= lockoutEndDateUTC && prospectiveEndDateUTC >= lockoutStartDateUTC) {
+          return false; // Conflict found. This disables dates before the lockout for large orders.
+        }
+      } else {
+        // Condition 3: Logic for SMALL orders (quantity <= 2).
+        // A small order is much simpler. It is only disallowed if the specific date
+        // selected falls directly inside an existing lockout period.
+        if (checkingDateUTC >= lockoutStartDateUTC && checkingDateUTC <= lockoutEndDateUTC) {
+          return false; // This specific day is blocked.
+        }
       }
     }
   }
 
-  // If no disabling rules match, the date is allowed.
+  // If the date passes all checks for its order size, it is allowed.
   return true;
 };
+
 
 
 const selectDate = (date) => {
     newReservation.value.pickup_date = date.toLocaleDateString('en-CA');
     isDateMenuVisible.value = false;
 };
+
+watch(() => newReservation.value.quantity, (newQuantity, oldQuantity) => {
+  if (isDialogVisible.value && oldQuantity !== undefined) {
+    newReservation.value.pickup_date = null;
+    newDateObject.value = null;
+  }
+});
 
 watch(() => isDialogVisible.value,(dialogIsVisible) => {
   if(dialogIsVisible){
