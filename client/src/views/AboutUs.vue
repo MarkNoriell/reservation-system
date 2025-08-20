@@ -40,7 +40,7 @@
             What began as a simple hobby has grown into a passion for creating crochet pieces that bring warmth and joy to others. At iluvmica crochet, we make each item by hand with care and attention to detail. Whether it's a cozy accessory, a cute plushie, home decor, or a custom gift, every piece is made to make you smile.
           </p>
           <p>
-            We believe in taking time to craft each product with love, rather than rushing through it. This is what makes handmade items special—they have a story, a heart, and a personal touch.
+            We believe in taking time to craft each product with love, rather than rushing through it. This is what makes handmade items special they have a story, a heart, and a personal touch.
           </p>
           <p>
             Our goal is to offer you something meaningful, whether you're buying a gift for someone special or treating yourself to something cute and cozy. With iluvmica crochet, you're not just supporting a small business—you’re supporting creativity, patience, and the beauty of handmade work.

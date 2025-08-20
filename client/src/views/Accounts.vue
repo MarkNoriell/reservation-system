@@ -101,7 +101,7 @@
           <v-card-text>
             <v-container>
               <v-text-field v-model="editedUser.customer_name" label="Full Name" variant="outlined"></v-text-field>
-              <v-text-field v-model="editedUser.username" label="Username (Email)" variant="outlined" :disabled="isEditMode"></v-text-field>
+              <v-text-field v-model="editedUser.username" label="Username" variant="outlined" :disabled="isEditMode"></v-text-field>
               <!-- Show password field only when adding a new user -->
               <v-text-field v-if="!isEditMode" v-model="editedUser.password" label="Password" type="password" variant="outlined"></v-text-field>
               <v-select v-model="editedUser.access_rights" :items="['Admin', 'User']" label="Access Rights" variant="outlined"></v-select>
@@ -147,7 +147,7 @@ const deactivatedUsers = computed(() => allAccounts.value.filter(u => u.deleted_
 // --- DATA TABLE HEADERS (updated keys) ---
 const accountHeaders = [
   { title: 'Full Name', key: 'customer_name' },
-  { title: 'Username (Email)', key: 'username' },
+  { title: 'Username', key: 'username' },
   { title: 'Role', key: 'access_rights' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
 ];

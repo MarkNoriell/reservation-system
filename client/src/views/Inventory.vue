@@ -233,7 +233,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 
 // --- STATE MANAGEMENT ---
 const products = ref([]);
-const categories = ['Keychain', 'Plushie', 'Coaster', 'Tote Bag', 'Character'];
+const categories = ['Keychain', 'Hair Clip','Mini Bouquet Keychain','Hair Band','Flower Boquet','Flower Wrap', 'Flower with Plastic','Flower in a Pot'];
 const dialog = ref(false);
 const confirmArchiveDialog = ref(false);
 const imageDialog = ref(false);

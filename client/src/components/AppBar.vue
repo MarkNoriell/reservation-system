@@ -85,16 +85,15 @@ const navItems = ref([
 ])
 
 const userNavItems = ['Home','Logout','About Us','Shop','My Reservations']
+const notIncludedInAdmin = ['Shop','My Reservations','About Us']
 
 const filterNavItems = (navItems,accessRights) => {
-  console.log(accessRights,"accessRights");
-  
   return navItems.filter((items) => {
     if(accessRights == 'User'){
       return userNavItems.includes(items.title)
     }
     else{
-      return items
+      return !notIncludedInAdmin.includes(items.title)
     }
   })
 }
