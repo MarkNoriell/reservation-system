@@ -103,8 +103,9 @@
         <v-card-text>
           <v-form ref="reservationForm">
             <v-text-field
+              disabled
               v-model="newReservation.customer_name"
-              label="Full Name"
+              label="Username"
               variant="outlined"
               :rules="validationRules.required"
               class="mb-2"
@@ -172,7 +173,7 @@ const usePersistStore = persistStore()
 
 // --- CONFIGURATION ---
 const API_BASE_URL = 'http://localhost:3000/api';
-const DAILY_RESERVATION_LIMIT = 10;
+const DAILY_RESERVATION_LIMIT = 5;
 
 // --- STATE MANAGEMENT ---
 const products = ref([]);
@@ -298,16 +299,52 @@ const saveReservation = async () => {
   }
 };
 
-// --- DATE PICKER HELPER FUNCTIONS (No changes here) ---
-const isDateAllowed = (date) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (date < today) return false;
+// --- DATE PICKER HELPER FUNCTIONS ---
 
-  const dateString = date.toLocaleDateString('en-CA');
-  const count = dateCounts.value[dateString] || 0;
-  return count < DAILY_RESERVATION_LIMIT;
+/**
+ * REFACTORED FUNCTION
+ * Checks if a specific date is allowed for selection in the date picker.
+ * A date is disallowed if:
+ * 1. It is in the past.
+ * 2. It falls within a 4-day "lockout" period, which starts on any day
+ *    that has reached its DAILY_RESERVATION_LIMIT.
+ */
+const isDateAllowed = (date) => {
+  // The 'date' argument from v-date-picker is a local Date object. We convert it
+  // to a UTC-based date at midnight for consistent, timezone-agnostic comparison.
+  const checkingDateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+
+  // Rule 1: Disable all dates in the past.
+  const today = new Date();
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  if (checkingDateUTC < todayUTC) {
+    return false;
+  }
+
+  // Rule 2: Check for 4-day "lockout" periods.
+  for (const dateString in dateCounts.value) { // dateString is 'YYYY-MM-DD'
+    const count = dateCounts.value[dateString];
+
+    if (count >= DAILY_RESERVATION_LIMIT) {
+      // Create the start of the lockout period. new Date('YYYY-MM-DD')
+      // correctly parses this as UTC midnight.
+      const lockoutStartDateUTC = new Date(dateString);
+      
+      // Calculate the end of the lockout period (3 days after the start).
+      const lockoutEndDateUTC = new Date(lockoutStartDateUTC);
+      lockoutEndDateUTC.setUTCDate(lockoutStartDateUTC.getUTCDate() + 3);
+
+      // If the date being checked falls within this UTC range, disable it.
+      if (checkingDateUTC >= lockoutStartDateUTC && checkingDateUTC <= lockoutEndDateUTC) {
+        return false;
+      }
+    }
+  }
+
+  // If no disabling rules match, the date is allowed.
+  return true;
 };
+
 
 const selectDate = (date) => {
     newReservation.value.pickup_date = date.toLocaleDateString('en-CA');

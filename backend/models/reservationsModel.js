@@ -80,7 +80,7 @@ exports.updateDateModel = (id, date) => {
 // Get counts of reservations grouped by date
 exports.getDateCountsModel = () => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT pickup_date, COUNT(reservation_id) as count FROM reservations GROUP BY pickup_date`;
+        const query = `SELECT pickup_date, SUM(quantity) as count FROM reservations GROUP BY pickup_date`;
         pool.query(query, (err, results) => {
             if (err) return reject(err);
             // Convert array of objects to a simple { 'YYYY-MM-DD': count } map

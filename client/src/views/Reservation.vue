@@ -19,9 +19,9 @@
                 single-line
               ></v-text-field>
             </div>
-            <v-btn color="primary" variant="flat" @click="openAddDialog" prepend-icon="mdi-plus">
+            <!-- <v-btn color="primary" variant="flat" @click="openAddDialog" prepend-icon="mdi-plus">
               New Reservation
-            </v-btn>
+            </v-btn> -->
           </v-card-title>
           <v-card-text>
             <v-data-table
